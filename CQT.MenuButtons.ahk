@@ -63,7 +63,8 @@ class MenuButtons
 	
 	About()
 	{
-		; TODO
+		Gui, % this.Parent.hMainWindow ":+OwnDialogs"
+		MsgBox, CodeQuickTester written by GeekDude
 	}
 	
 	Install()

@@ -42,7 +42,7 @@ class CodeQuickTester
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
-				["&About", Buttons.Help.Bind(Buttons)]
+				["&About", Buttons.About.Bind(Buttons)]
 			]]
 		]
 		)
