@@ -1,6 +1,7 @@
 #SingleInstance, Off
 #NoEnv
 SetBatchLines, -1
+SetWorkingDir, %A_ScriptDir%
 
 global B_Params := []
 Loop, %0%
@@ -41,6 +42,7 @@ TesterClose(Tester)
 	return
 */
 
+#Include %A_ScriptDir%
 #Include CQT.ahk
 #Include ServiceHandler.ahk
 #Include WinEvents.ahk
