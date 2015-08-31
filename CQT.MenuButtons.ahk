@@ -53,7 +53,7 @@ class MenuButtons
 	
 	Indent()
 	{
-		this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Indent))
+		this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))
 	}
 	
 	Help()

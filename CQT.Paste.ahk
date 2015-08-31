@@ -8,10 +8,10 @@ class Paste
 		Gui, New, +Owner%ParentWnd% +ToolWindow +hWndhWnd
 		this.hWnd := hWnd
 		Gui, Margin, 5, 5
-		Gui, Font, % this.Parent.Font, % this.Parent.TypeFace
+		Gui, Font, % this.Parent.Settings.Font, % this.Parent.Settings.TypeFace
 		
 		Gui, Add, Text, xm ym w30 h22 +0x200, Desc: ; 0x200 for vcenter
-		Gui, Add, Edit, x+5 yp w125 h22 hWndhPasteDesc, % this.Parent.DefaultDesc
+		Gui, Add, Edit, x+5 yp w125 h22 hWndhPasteDesc, % this.Parent.Settings.DefaultDesc
 		this.hPasteDesc := hPasteDesc
 		
 		Gui, Add, Button, x+4 yp-1 w52 h24 Default hWndhPasteButton, Paste
@@ -20,7 +20,7 @@ class Paste
 		GuiControl, +g, %hPasteButton%, %BoundPaste%
 		
 		Gui, Add, Text, xm y+5 w30 h22 +0x200, Name: ; 0x200 for vcenter
-		Gui, Add, Edit, x+5 yp w100 h22 hWndhPasteName, % this.Parent.DefaultName
+		Gui, Add, Edit, x+5 yp w100 h22 hWndhPasteName, % this.Parent.Settings.DefaultName
 		this.hPasteName := hPasteName
 		
 		Gui, Add, ComboBox, x+5 yp w75 hWndhPasteChan, Announce||#ahk|#ahkscript

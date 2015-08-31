@@ -4,19 +4,9 @@ class CodeQuickTester
 	DefaultPath := "C:\Windows\ShellNew\Template.ahk"
 	Title := "CodeQuickTester"
 	
-	__New()
+	__New(Settings)
 	{
-		; TODO: Settings passed in
-		this.DefaultName := "GeekDude"
-		this.DefaultDesc := ""
-		this.FGColor := 0xCDEDED
-		this.BGColor := 0x3F3F3F
-		this.TabSize := 4
-		this.Indent := "`t"
-		this.TypeFace := "Microsoft Sans Serif"
-		this.Font := "s8 wNorm"
-		this.CodeTypeFace := "Consolas"
-		this.CodeFont := "s9 wBold"
+		this.Settings := Settings
 		
 		this.Shell := ComObjCreate("WScript.Shell")
 		
@@ -54,9 +44,9 @@ class CodeQuickTester
 		Gui, Margin, 5, 5
 		
 		; Add code editor
-		Gui, Font, % this.CodeFont, % this.CodeTypeFace
+		Gui, Font, % this.Settings.CodeFont, % this.Settings.CodeTypeFace
 		this.InitRichEdit()
-		Gui, Font, % this.Font, % this.TypeFace
+		Gui, Font, % this.Settings.Font, % this.Settings.TypeFace
 		
 		; Get starting tester contents
 		FilePath := B_Params[1] ? RegExReplace(B_Params[1], "^ahk:") : this.DefaultPath
@@ -85,21 +75,22 @@ class CodeQuickTester
 	
 	InitRichEdit()
 	{
+		Settings := this.Settings
 		Gui, Add, Custom, ClassRichEdit50W hWndhCodeEditor +0x5031b1c4 +E0x20000
 		this.hCodeEditor := hCodeEditor
 		
 		; Set background color
-		SendMessage, 0x443, 0, this.BGColor,, ahk_id %hCodeEditor% ; EM_SETBKGNDCOLOR
+		SendMessage, 0x443, 0, Settings.BGColor,, ahk_id %hCodeEditor% ; EM_SETBKGNDCOLOR
 		
 		; Set FG color
 		VarSetCapacity(CharFormat, 116, 0)
 		NumPut(116, CharFormat, 0, "UInt") ; cbSize := sizeOf(CHARFORMAT2)
 		NumPut(0x40000000, CharFormat, 4, "UInt") ; dwMask := CFM_COLOR
-		NumPut(this.FGColor, CharFormat, 20, "UInt") ; crTextColor := 0xBBGGRR
+		NumPut(Settings.FGColor, CharFormat, 20, "UInt") ; crTextColor := 0xBBGGRR
 		SendMessage, 0x444, 0, &CharFormat,, ahk_id %hCodeEditor% ; EM_SETCHARFORMAT
 		
 		; Set tab size to 4
-		VarSetCapacity(TabStops, 4, 0), NumPut(this.TabSize*4, TabStops, "UInt")
+		VarSetCapacity(TabStops, 4, 0), NumPut(Settings.TabSize*4, TabStops, "UInt")
 		SendMessage, 0x0CB, 1, &TabStops,, ahk_id %hCodeEditor% ; EM_SETTABSTOPS
 		
 		; Change text limit from 32,767 to max

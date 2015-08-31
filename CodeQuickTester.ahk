@@ -10,10 +10,20 @@ Loop, %0%
 Menu, Tray, Icon, %A_AhkPath%, 2
 FileEncoding, UTF-8
 
-; TODO: command line input
 ; TODO: Figure out why it gets sometimes gets stuck on "Kill" when using MultiTester
 
-Tester := new CodeQuickTester()
+Settings := {"DefaultName": "GeekDude"
+, "DefaultDesc": ""
+, "FGColor": 0xCDEDED
+, "BGColor": 0x3F3F3F
+, "TabSize": 4
+, "Indent": "`t"
+, "TypeFace": "Microsoft Sans Serif"
+, "Font": "s8 wNorm"
+, "CodeTypeFace": "Consolas"
+, "CodeFont": "s9 wBold"}
+
+Tester := new CodeQuickTester(Settings)
 Tester.RegisterCloseCallback(Func("TesterClose"))
 return
 
