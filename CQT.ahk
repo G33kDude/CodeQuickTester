@@ -171,18 +171,22 @@ class CodeQuickTester
 	{
 		if (hWnd == this.hCodeEditor)
 		{
-			if (Msg == 0x100 && Chr(wParam) == "`t")
+			if (Msg == 0x100) ; WM_KEYDOWN
 			{
-				ControlGet, Selected, Selected,,, % "ahk_id" this.hCodeEditor
-				if (Selected == "")
-					SendMessage, 0xC2, 1, &(x:="`t"),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
-				this.UpdateStatusBar()
-				return False
+				if (wParam == GetKeyVK("Tab"))
+				{
+					ControlGet, Selected, Selected,,, % "ahk_id" this.hCodeEditor
+					if (Selected == "")
+						SendMessage, 0xC2, 1, &(x:="`t"),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
+					this.UpdateStatusBar()
+					return False
+				}
+				else if (wParam == GetKeyVK("Escape"))
+					return False
 			}
 			
 			; Call UpdateStatusBar after the edit handles the keystroke
 			SetTimer(this.Bound.UpdateStatusBar, -0)
-			return
 		}
 	}
 	
