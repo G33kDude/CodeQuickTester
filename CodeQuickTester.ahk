@@ -1,6 +1,7 @@
 ﻿#SingleInstance, Off
 #NoEnv
 SetBatchLines, -1
+SetWorkingDir, %A_ScriptDir%
 
 global B_Params := []
 Loop, %0%
@@ -9,10 +10,20 @@ Loop, %0%
 Menu, Tray, Icon, %A_AhkPath%, 2
 FileEncoding, UTF-8
 
-; TODO: command line input
 ; TODO: Figure out why it gets sometimes gets stuck on "Kill" when using MultiTester
 
-Tester := new CodeQuickTester()
+Settings := {"DefaultName": "GeekDude"
+, "DefaultDesc": ""
+, "FGColor": 0xCDEDED
+, "BGColor": 0x3F3F3F
+, "TabSize": 4
+, "Indent": "`t"
+, "TypeFace": "Microsoft Sans Serif"
+, "Font": "s8 wNorm"
+, "CodeTypeFace": "Consolas"
+, "CodeFont": "s9 wBold"}
+
+Tester := new CodeQuickTester(Settings)
 Tester.RegisterCloseCallback(Func("TesterClose"))
 return
 
@@ -41,25 +52,16 @@ TesterClose(Tester)
 	return
 */
 
+#Include %A_ScriptDir%
 class CodeQuickTester
 {
 	static Msftedit := DllCall("LoadLibrary", "Str", "Msftedit.dll")
 	DefaultPath := "C:\Windows\ShellNew\Template.ahk"
 	Title := "CodeQuickTester"
 	
-	__New()
+	__New(Settings)
 	{
-		; TODO: Settings passed in
-		this.DefaultName := "GeekDude"
-		this.DefaultDesc := ""
-		this.FGColor := 0xCDEDED
-		this.BGColor := 0x3F3F3F
-		this.TabSize := 4
-		this.Indent := "`t"
-		this.TypeFace := "Microsoft Sans Serif"
-		this.Font := "s8 wNorm"
-		this.CodeTypeFace := "Consolas"
-		this.CodeFont := "s9 wBold"
+		this.Settings := Settings
 		
 		this.Shell := ComObjCreate("WScript.Shell")
 		
@@ -85,7 +87,7 @@ class CodeQuickTester
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
-				["&About", Buttons.Help.Bind(Buttons)]
+				["&About", Buttons.About.Bind(Buttons)]
 			]]
 		]
 		)
@@ -97,9 +99,9 @@ class CodeQuickTester
 		Gui, Margin, 5, 5
 		
 		; Add code editor
-		Gui, Font, % this.CodeFont, % this.CodeTypeFace
+		Gui, Font, % this.Settings.CodeFont, % this.Settings.CodeTypeFace
 		this.InitRichEdit()
-		Gui, Font, % this.Font, % this.TypeFace
+		Gui, Font, % this.Settings.Font, % this.Settings.TypeFace
 		
 		; Get starting tester contents
 		FilePath := B_Params[1] ? RegExReplace(B_Params[1], "^ahk:") : this.DefaultPath
@@ -128,21 +130,22 @@ class CodeQuickTester
 	
 	InitRichEdit()
 	{
+		Settings := this.Settings
 		Gui, Add, Custom, ClassRichEdit50W hWndhCodeEditor +0x5031b1c4 +E0x20000
 		this.hCodeEditor := hCodeEditor
 		
 		; Set background color
-		SendMessage, 0x443, 0, this.BGColor,, ahk_id %hCodeEditor% ; EM_SETBKGNDCOLOR
+		SendMessage, 0x443, 0, Settings.BGColor,, ahk_id %hCodeEditor% ; EM_SETBKGNDCOLOR
 		
 		; Set FG color
 		VarSetCapacity(CharFormat, 116, 0)
 		NumPut(116, CharFormat, 0, "UInt") ; cbSize := sizeOf(CHARFORMAT2)
 		NumPut(0x40000000, CharFormat, 4, "UInt") ; dwMask := CFM_COLOR
-		NumPut(this.FGColor, CharFormat, 20, "UInt") ; crTextColor := 0xBBGGRR
+		NumPut(Settings.FGColor, CharFormat, 20, "UInt") ; crTextColor := 0xBBGGRR
 		SendMessage, 0x444, 0, &CharFormat,, ahk_id %hCodeEditor% ; EM_SETCHARFORMAT
 		
 		; Set tab size to 4
-		VarSetCapacity(TabStops, 4, 0), NumPut(this.TabSize*4, TabStops, "UInt")
+		VarSetCapacity(TabStops, 4, 0), NumPut(Settings.TabSize*4, TabStops, "UInt")
 		SendMessage, 0x0CB, 1, &TabStops,, ahk_id %hCodeEditor% ; EM_SETTABSTOPS
 		
 		; Change text limit from 32,767 to max
@@ -223,18 +226,22 @@ class CodeQuickTester
 	{
 		if (hWnd == this.hCodeEditor)
 		{
-			if (Msg == 0x100 && Chr(wParam) == "`t")
+			if (Msg == 0x100) ; WM_KEYDOWN
 			{
-				ControlGet, Selected, Selected,,, % "ahk_id" this.hCodeEditor
-				if (Selected == "")
-					SendMessage, 0xC2, 1, &(x:="`t"),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
-				this.UpdateStatusBar()
-				return False
+				if (wParam == GetKeyVK("Tab"))
+				{
+					ControlGet, Selected, Selected,,, % "ahk_id" this.hCodeEditor
+					if (Selected == "")
+						SendMessage, 0xC2, 1, &(x:="`t"),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
+					this.UpdateStatusBar()
+					return False
+				}
+				else if (wParam == GetKeyVK("Escape"))
+					return False
 			}
 			
 			; Call UpdateStatusBar after the edit handles the keystroke
 			SetTimer(this.Bound.UpdateStatusBar, -0)
-			return
 		}
 	}
 	
@@ -315,10 +322,10 @@ class CodeQuickTester
 			Gui, New, +Owner%ParentWnd% +ToolWindow +hWndhWnd
 			this.hWnd := hWnd
 			Gui, Margin, 5, 5
-			Gui, Font, % this.Parent.Font, % this.Parent.TypeFace
+			Gui, Font, % this.Parent.Settings.Font, % this.Parent.Settings.TypeFace
 			
 			Gui, Add, Text, xm ym w30 h22 +0x200, Desc: ; 0x200 for vcenter
-			Gui, Add, Edit, x+5 yp w125 h22 hWndhPasteDesc, % this.Parent.DefaultDesc
+			Gui, Add, Edit, x+5 yp w125 h22 hWndhPasteDesc, % this.Parent.Settings.DefaultDesc
 			this.hPasteDesc := hPasteDesc
 			
 			Gui, Add, Button, x+4 yp-1 w52 h24 Default hWndhPasteButton, Paste
@@ -327,7 +334,7 @@ class CodeQuickTester
 			GuiControl, +g, %hPasteButton%, %BoundPaste%
 			
 			Gui, Add, Text, xm y+5 w30 h22 +0x200, Name: ; 0x200 for vcenter
-			Gui, Add, Edit, x+5 yp w100 h22 hWndhPasteName, % this.Parent.DefaultName
+			Gui, Add, Edit, x+5 yp w100 h22 hWndhPasteName, % this.Parent.Settings.DefaultName
 			this.hPasteName := hPasteName
 			
 			Gui, Add, ComboBox, x+5 yp w75 hWndhPasteChan, Announce||#ahk|#ahkscript
@@ -416,7 +423,7 @@ class CodeQuickTester
 		
 		Indent()
 		{
-			this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Indent))
+			this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))
 		}
 		
 		Help()
@@ -426,7 +433,8 @@ class CodeQuickTester
 		
 		About()
 		{
-			; TODO
+			Gui, % this.Parent.hMainWindow ":+OwnDialogs"
+			MsgBox, CodeQuickTester written by GeekDude
 		}
 		
 		Install()
