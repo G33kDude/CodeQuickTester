@@ -33,7 +33,7 @@ class MenuButtons
 	Fetch()
 	{
 		Gui, +OwnDialogs
-		InputBox, Url, %Title%, Enter a URL to fetch code from.
+		InputBox, Url, % this.Parent.Title, Enter a URL to fetch code from.
 		if (Url := Trim(Url))
 			this.Parent.LoadCode(UrlDownloadToVar(Url))
 	}
@@ -64,7 +64,7 @@ class MenuButtons
 	About()
 	{
 		Gui, % this.Parent.hMainWindow ":+OwnDialogs"
-		MsgBox, CodeQuickTester written by GeekDude
+		MsgBox,, % this.Parent.Title, CodeQuickTester written by GeekDude
 	}
 	
 	Install()

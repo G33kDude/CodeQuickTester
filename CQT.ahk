@@ -160,7 +160,7 @@ class CodeQuickTester
 		GuiControlGet, CodeEditor,, % this.hCodeEditor
 		if (CodeEditor && CodeEditor != Code) ; TODO: Do I need to Trim() here?
 		{
-			MsgBox, 308, %Title%, Are you sure you want to overwrite your code?
+			MsgBox, 308, % this.Title, Are you sure you want to overwrite your code?
 			IfMsgBox, No
 				return
 		}
