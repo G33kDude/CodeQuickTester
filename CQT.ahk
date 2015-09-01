@@ -157,14 +157,15 @@ class CodeQuickTester
 	
 	LoadCode(Code)
 	{
-		GuiControlGet, CodeEditor,, % this.hCodeEditor
+		CodeEditor := this.Code
 		if (CodeEditor && CodeEditor != Code) ; TODO: Do I need to Trim() here?
 		{
 			MsgBox, 308, % this.Title, Are you sure you want to overwrite your code?
 			IfMsgBox, No
 				return
 		}
-		this.Code := Code, this.UpdateStatusBar()
+		this.Code := Code
+		this.UpdateStatusBar()
 	}
 	
 	OnMessage(wParam, lParam, Msg, hWnd)

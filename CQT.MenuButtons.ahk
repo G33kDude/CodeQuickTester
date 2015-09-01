@@ -11,10 +11,9 @@ class MenuButtons
 		FileSelectFile, FilePath, S2
 		if ErrorLevel
 			return
-		GuiControlGet, CodeEditor,, % this.Parent.hCodeEditor
 		
 		; TODO: Confirm before overwrite
-		FileOpen(FilePath, "w").Write(CodeEditor)
+		FileOpen(FilePath, "w").Write(this.Parent.Code)
 	}
 	
 	Open()
