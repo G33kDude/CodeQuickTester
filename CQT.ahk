@@ -229,6 +229,13 @@ class CodeQuickTester
 	
 	GuiClose()
 	{
+		if Trim(this.Code, " `t`r`n") ; TODO: Check against last saved code
+		{
+			MsgBox, 308, % this.Title, Are you sure you want to exit?
+			IfMsgBox, No
+				return true
+		}
+		
 		; TODO: Finish auto-script-kill
 		if (this.Exec.Status == 0) ; Runnning
 		{
