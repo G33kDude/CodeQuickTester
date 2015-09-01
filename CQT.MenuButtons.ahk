@@ -8,11 +8,10 @@ class MenuButtons
 	Save()
 	{
 		Gui, +OwnDialogs
-		FileSelectFile, FilePath, S2
+		FileSelectFile, FilePath, S18
 		if ErrorLevel
 			return
 		
-		; TODO: Confirm before overwrite
 		FileOpen(FilePath, "w").Write(this.Parent.Code)
 	}
 	
