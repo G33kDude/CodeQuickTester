@@ -13,36 +13,37 @@ class WinEvents ; static class
 		this.Table.Delete(hWnd)
 	}
 	
-	Dispatch(hWnd, Type)
+	Dispatch(hWnd, Type, Params*)
 	{
 		Info := this.Table[hWnd]
 		
-		return Info.Class[Info.Prefix . Type].Call(Info.Class)
+		; TODO: Figure out the most efficient way to do [a,b*]*
+		return Info.Class[Info.Prefix . Type].Call([Info.Class, Params*]*)
 	}
 	
 	; These *CANNOT* be added dynamically or handled dynamically via __Call
-	Close()
+	Close(Params*)
 	{
-		return WinEvents.Dispatch(this, "Close")
+		return WinEvents.Dispatch(this, "Close", Params*)
 	}
 	
-	Escape()
+	Escape(Params*)
 	{
-		return WinEvents.Dispatch(this, "Escape")
+		return WinEvents.Dispatch(this, "Escape", Params*)
 	}
 	
-	Size()
+	Size(Params*)
 	{
-		return WinEvents.Dispatch(this, "Size")
+		return WinEvents.Dispatch(this, "Size", Params*)
 	}
 	
-	ContextMenu()
+	ContextMenu(Params*)
 	{
-		return WinEvents.Dispatch(this, "ContextMenu")
+		return WinEvents.Dispatch(this, "ContextMenu", Params*)
 	}
 	
-	DropFiles()
+	DropFiles(Params*)
 	{
-		return WinEvents.Dispatch(this, "DropFiles")
+		return WinEvents.Dispatch(this, "DropFiles", Params*)
 	}
 }
