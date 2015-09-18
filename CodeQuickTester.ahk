@@ -11,6 +11,8 @@ Menu, Tray, Icon, %A_AhkPath%, 2
 FileEncoding, UTF-8
 
 ; TODO: Figure out why it gets sometimes gets stuck on "Kill" when using MultiTester
+; TODO: Add right click menu
+; TODO: Add params menu
 
 Settings := {"DefaultName": "GeekDude"
 , "DefaultDesc": ""
