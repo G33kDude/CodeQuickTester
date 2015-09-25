@@ -39,6 +39,11 @@ class Paste
 		Gui, Destroy
 	}
 	
+	GuiEscape()
+	{
+		this.GuiClose()
+	}
+	
 	Paste()
 	{
 		GuiControlGet, PasteDesc,, % this.hPasteDesc
