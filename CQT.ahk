@@ -21,6 +21,7 @@ class CodeQuickTester
 		( Join
 		[
 			["&File", [
+				["&Run`tF5", this.Bound.RunButton],
 				["&Save`tCtrl+S", Buttons.Save.Bind(Buttons)],
 				["&Open`tCtrl+O", Buttons.Open.Bind(Buttons)],
 				["&New`tCtrl+N", Buttons.New.Bind(Buttons)],
