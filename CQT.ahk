@@ -29,6 +29,7 @@ class CodeQuickTester
 			]], ["&Tools", [
 				["&Paste`tCtrl+P", Buttons.Paste.Bind(Buttons)],
 				["Re&indent`tCtrl+I", Buttons.Indent.Bind(Buttons)],
+				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["Parameters", Buttons.Params.Bind(Buttons)],
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
@@ -38,7 +39,8 @@ class CodeQuickTester
 		]
 		)
 		
-		Gui, New, +Resize +hWndhMainWindow
+		Gui, New, +Resize +hWndhMainWindow -AlwaysOnTop
+		this.AlwaysOnTop := False
 		this.hMainWindow := hMainWindow
 		this.Menus := this.CreateMenuBar(Menus)
 		Gui, Menu, % this.Menus[1]

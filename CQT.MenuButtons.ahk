@@ -49,6 +49,20 @@ class MenuButtons
 		; TODO
 	}
 	
+	ToggleOnTop()
+	{
+		if (this.Parent.AlwaysOnTop := !this.Parent.AlwaysOnTop)
+		{
+			Menu, % this.Parent.Menus[3], Check, &AlwaysOnTop`tAlt+A
+			Gui, +AlwaysOnTop
+		}
+		else
+		{
+			Menu, % this.Parent.Menus[3], Uncheck, &AlwaysOnTop`tAlt+A
+			Gui, -AlwaysOnTop
+		}
+	}
+	
 	Indent()
 	{
 		this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))
