@@ -11,6 +11,8 @@ Menu, Tray, Icon, %A_AhkPath%, 2
 FileEncoding, UTF-8
 
 ; TODO: Figure out why it gets sometimes gets stuck on "Kill" when using MultiTester
+; TODO: Add right click menu
+; TODO: Add params menu
 
 Settings := {"DefaultName": "GeekDude"
 , "DefaultDesc": ""
@@ -76,6 +78,7 @@ class CodeQuickTester
 		( Join
 		[
 			["&File", [
+				["&Run`tF5", this.Bound.RunButton],
 				["&Save`tCtrl+S", Buttons.Save.Bind(Buttons)],
 				["&Open`tCtrl+O", Buttons.Open.Bind(Buttons)],
 				["&New`tCtrl+N", Buttons.New.Bind(Buttons)],
@@ -83,6 +86,7 @@ class CodeQuickTester
 			]], ["&Tools", [
 				["&Paste`tCtrl+P", Buttons.Paste.Bind(Buttons)],
 				["Re&indent`tCtrl+I", Buttons.Indent.Bind(Buttons)],
+				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["Parameters", Buttons.Params.Bind(Buttons)],
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
@@ -92,7 +96,8 @@ class CodeQuickTester
 		]
 		)
 		
-		Gui, New, +Resize +hWndhMainWindow
+		Gui, New, +Resize +hWndhMainWindow -AlwaysOnTop
+		this.AlwaysOnTop := False
 		this.hMainWindow := hMainWindow
 		this.Menus := this.CreateMenuBar(Menus)
 		Gui, Menu, % this.Menus[1]
@@ -212,14 +217,16 @@ class CodeQuickTester
 	
 	LoadCode(Code)
 	{
-		GuiControlGet, CodeEditor,, % this.hCodeEditor
+		CodeEditor := this.Code
 		if (CodeEditor && CodeEditor != Code) ; TODO: Do I need to Trim() here?
 		{
-			MsgBox, 308, %Title%, Are you sure you want to overwrite your code?
+			Gui, +OwnDialogs
+			MsgBox, 308, % this.Title " - Confirm Overwrite", Are you sure you want to overwrite your code?
 			IfMsgBox, No
 				return
 		}
-		this.Code := Code, this.UpdateStatusBar()
+		this.Code := Code
+		this.UpdateStatusBar()
 	}
 	
 	OnMessage(wParam, lParam, Msg, hWnd)
@@ -282,8 +289,22 @@ class CodeQuickTester
 		GuiControl, Move, % this.hRunButton, % "x" 5 "y" A_GuiHeight-50 "w" A_GuiWidth-10 "h" 22
 	}
 	
+	GuiDropFiles(Files)
+	{
+		; TODO: support multiple file drop
+		this.LoadCode(FileOpen(Files[1], "r").Read())
+	}
+	
 	GuiClose()
 	{
+		if Trim(this.Code, " `t`r`n") ; TODO: Check against last saved code
+		{
+			Gui, +OwnDialogs
+			MsgBox, 308, % this.Title " - Confirm Exit", Are you sure you want to exit?
+			IfMsgBox, No
+				return true
+		}
+		
 		; TODO: Finish auto-script-kill
 		if (this.Exec.Status == 0) ; Runnning
 		{
@@ -313,148 +334,167 @@ class CodeQuickTester
 	}
 	
 	class Paste
+{
+	__New(Parent)
 	{
-		__New(Parent)
-		{
-			this.Parent := Parent
-			
-			ParentWnd := this.Parent.hMainWindow
-			Gui, New, +Owner%ParentWnd% +ToolWindow +hWndhWnd
-			this.hWnd := hWnd
-			Gui, Margin, 5, 5
-			Gui, Font, % this.Parent.Settings.Font, % this.Parent.Settings.TypeFace
-			
-			Gui, Add, Text, xm ym w30 h22 +0x200, Desc: ; 0x200 for vcenter
-			Gui, Add, Edit, x+5 yp w125 h22 hWndhPasteDesc, % this.Parent.Settings.DefaultDesc
-			this.hPasteDesc := hPasteDesc
-			
-			Gui, Add, Button, x+4 yp-1 w52 h24 Default hWndhPasteButton, Paste
-			this.hPasteButton := hPasteButton
-			BoundPaste := this.Paste.Bind(this)
-			GuiControl, +g, %hPasteButton%, %BoundPaste%
-			
-			Gui, Add, Text, xm y+5 w30 h22 +0x200, Name: ; 0x200 for vcenter
-			Gui, Add, Edit, x+5 yp w100 h22 hWndhPasteName, % this.Parent.Settings.DefaultName
-			this.hPasteName := hPasteName
-			
-			Gui, Add, ComboBox, x+5 yp w75 hWndhPasteChan, Announce||#ahk|#ahkscript
-			this.hPasteChan := hPasteChan
-			
-			PostMessage, 0x153, -1, 22-6,, ahk_id %hPasteChan% ; Set height of ComboBox
-			Gui, Show,, Paste
-			
-			WinEvents.Register(this.hWnd, this)
-		}
+		this.Parent := Parent
 		
-		GuiClose()
-		{
-			GuiControl, -g, % this.hPasteButton
-			WinEvents.Unregister(this.hWnd)
-			Gui, Destroy
-		}
+		ParentWnd := this.Parent.hMainWindow
+		Gui, New, +Owner%ParentWnd% +ToolWindow +hWndhWnd
+		this.hWnd := hWnd
+		Gui, Margin, 5, 5
+		Gui, Font, % this.Parent.Settings.Font, % this.Parent.Settings.TypeFace
 		
-		Paste()
-		{
-			GuiControlGet, PasteDesc,, % this.hPasteDesc
-			GuiControlGet, PasteName,, % this.hPasteName
-			GuiControlGet, PasteChan,, % this.hPasteChan
-			this.GuiClose()
-			
-			Link := Ahkbin(this.Parent.Code, PasteName, PasteDesc, PasteChan)
-			
-			MsgBox, 292, %Title%, Link received:`n%Link%`n`nCopy to clipboard?
-			IfMsgBox, Yes
-				Clipboard := Link
-		}
+		Gui, Add, Text, xm ym w30 h22 +0x200, Desc: ; 0x200 for vcenter
+		Gui, Add, Edit, x+5 yp w125 h22 hWndhPasteDesc, % this.Parent.Settings.DefaultDesc
+		this.hPasteDesc := hPasteDesc
+		
+		Gui, Add, Button, x+4 yp-1 w52 h24 Default hWndhPasteButton, Paste
+		this.hPasteButton := hPasteButton
+		BoundPaste := this.Paste.Bind(this)
+		GuiControl, +g, %hPasteButton%, %BoundPaste%
+		
+		Gui, Add, Text, xm y+5 w30 h22 +0x200, Name: ; 0x200 for vcenter
+		Gui, Add, Edit, x+5 yp w100 h22 hWndhPasteName, % this.Parent.Settings.DefaultName
+		this.hPasteName := hPasteName
+		
+		Gui, Add, ComboBox, x+5 yp w75 hWndhPasteChan, Announce||#ahk|#ahkscript
+		this.hPasteChan := hPasteChan
+		
+		PostMessage, 0x153, -1, 22-6,, ahk_id %hPasteChan% ; Set height of ComboBox
+		Gui, Show,, % this.Parent.Title " - Paste"
+		
+		WinEvents.Register(this.hWnd, this)
 	}
 	
+	GuiClose()
+	{
+		GuiControl, -g, % this.hPasteButton
+		WinEvents.Unregister(this.hWnd)
+		Gui, Destroy
+	}
+	
+	GuiEscape()
+	{
+		this.GuiClose()
+	}
+	
+	Paste()
+	{
+		GuiControlGet, PasteDesc,, % this.hPasteDesc
+		GuiControlGet, PasteName,, % this.hPasteName
+		GuiControlGet, PasteChan,, % this.hPasteChan
+		this.GuiClose()
+		
+		Link := Ahkbin(this.Parent.Code, PasteName, PasteDesc, PasteChan)
+		
+		MsgBox, 292, % this.Parent.Title " - Pasted", Link received:`n%Link%`n`nCopy to clipboard?
+		IfMsgBox, Yes
+			Clipboard := Link
+	}
+}
+
 	class MenuButtons
+{
+	__New(Parent)
 	{
-		__New(Parent)
-		{
-			this.Parent := Parent
-		}
+		this.Parent := Parent
+	}
+	
+	Save()
+	{
+		Gui, +OwnDialogs
+		FileSelectFile, FilePath, S18,, % this.Parent.Title " - Save Code"
+		if ErrorLevel
+			return
 		
-		Save()
+		FileOpen(FilePath, "w").Write(this.Parent.Code)
+	}
+	
+	Open()
+	{
+		Gui, +OwnDialogs
+		FileSelectFile, FilePath, 3,, % this.Parent.Title " - Open Code"
+		if !ErrorLevel
+			this.Parent.LoadCode(FileOpen(FilePath, "r").Read())
+	}
+	
+	New() ; TODO: Make this work for MultiTester mode
+	{
+		Run, %A_AhkPath% %A_ScriptFullPath%
+	}
+	
+	Fetch()
+	{
+		Gui, +OwnDialogs
+		InputBox, Url, % this.Parent.Title " - Fetch Code", Enter a URL to fetch code from.
+		if (Url := Trim(Url))
+			this.Parent.LoadCode(UrlDownloadToVar(Url))
+	}
+	
+	Paste()
+	{ ; TODO: Recycle PasteInstance
+		if WinExist("ahk_id" this.PasteInstance.hWnd)
+			WinActivate, % "ahk_id" this.PasteInstance.hWnd
+		else
+			this.PasteInstance := new this.Parent.Paste(this.Parent)
+	}
+	
+	Params()
+	{
+		; TODO
+	}
+	
+	ToggleOnTop()
+	{
+		if (this.Parent.AlwaysOnTop := !this.Parent.AlwaysOnTop)
 		{
-			Gui, +OwnDialogs
-			FileSelectFile, FilePath, S2
-			if ErrorLevel
-				return
-			GuiControlGet, CodeEditor,, % this.Parent.hCodeEditor
-			
-			; TODO: Confirm before overwrite
-			FileOpen(FilePath, "w").Write(CodeEditor)
+			Menu, % this.Parent.Menus[3], Check, &AlwaysOnTop`tAlt+A
+			Gui, +AlwaysOnTop
 		}
-		
-		Open()
+		else
 		{
-			Gui, +OwnDialogs
-			FileSelectFile, FilePath, 3
-			if !ErrorLevel
-				this.Parent.LoadCode(FileOpen(FilePath, "r").Read())
-		}
-		
-		New() ; TODO: Make this work for MultiTester mode
-		{
-			Run, %A_AhkPath% %A_ScriptFullPath%
-		}
-		
-		Fetch()
-		{
-			Gui, +OwnDialogs
-			InputBox, Url, %Title%, Enter a URL to fetch code from.
-			if (Url := Trim(Url))
-				this.Parent.LoadCode(UrlDownloadToVar(Url))
-		}
-		
-		Paste()
-		{ ; TODO: Recycle PasteInstance
-			if WinExist("ahk_id" this.PasteInstance.hWnd)
-				WinActivate, % "ahk_id" this.PasteInstance.hWnd
-			else
-				this.PasteInstance := new this.Parent.Paste(this.Parent)
-		}
-		
-		Params()
-		{
-			; TODO
-		}
-		
-		Indent()
-		{
-			this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))
-		}
-		
-		Help()
-		{
-			Run, %A_AhkPath%\..\AutoHotkey.chm
-		}
-		
-		About()
-		{
-			Gui, % this.Parent.hMainWindow ":+OwnDialogs"
-			MsgBox, CodeQuickTester written by GeekDude
-		}
-		
-		Install()
-		{
-			Gui, +OwnDialogs
-			if ServiceHandler.Installed()
-			{
-				MsgBox, 36, , Are you sure you want to remove CodeQuickTester from being the default service handler for "ahk:" links?
-				IfMsgBox, Yes
-					ServiceHandler.Remove()
-			}
-			else
-			{
-				MsgBox, 36, , Are you sure you want to install CodeQuickTester as the default service handler for "ahk:" links?
-				IfMsgBox, Yes
-					ServiceHandler.Install()
-			}
+			Menu, % this.Parent.Menus[3], Uncheck, &AlwaysOnTop`tAlt+A
+			Gui, -AlwaysOnTop
 		}
 	}
 	
+	Indent()
+	{
+		this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))
+	}
+	
+	Help()
+	{
+		Run, %A_AhkPath%\..\AutoHotkey.chm
+	}
+	
+	About()
+	{
+		Gui, +OwnDialogs
+		MsgBox,, % this.Parent.Title " - About", CodeQuickTester written by GeekDude
+	}
+	
+	Install()
+	{
+		Gui, +OwnDialogs
+		if ServiceHandler.Installed()
+		{
+			MsgBox, 36, % this.Parent.Title " - Uninstall Service Handler"
+			, Are you sure you want to remove CodeQuickTester from being the default service handler for "ahk:" links?
+			IfMsgBox, Yes
+				ServiceHandler.Remove()
+		}
+		else
+		{
+			MsgBox, 36, % this.Parent.Title " - Install Service Handler"
+			, Are you sure you want to install CodeQuickTester as the default service handler for "ahk:" links?
+			IfMsgBox, Yes
+				ServiceHandler.Install()
+		}
+	}
+}
+
 }
 
 class ServiceHandler ; static class
@@ -498,37 +538,38 @@ class WinEvents ; static class
 		this.Table.Delete(hWnd)
 	}
 	
-	Dispatch(hWnd, Type)
+	Dispatch(hWnd, Type, Params*)
 	{
 		Info := this.Table[hWnd]
 		
-		return Info.Class[Info.Prefix . Type].Call(Info.Class)
+		; TODO: Figure out the most efficient way to do [a,b*]*
+		return Info.Class[Info.Prefix . Type].Call([Info.Class, Params*]*)
 	}
 	
 	; These *CANNOT* be added dynamically or handled dynamically via __Call
-	Close()
+	Close(Params*)
 	{
-		return WinEvents.Dispatch(this, "Close")
+		return WinEvents.Dispatch(this, "Close", Params*)
 	}
 	
-	Escape()
+	Escape(Params*)
 	{
-		return WinEvents.Dispatch(this, "Escape")
+		return WinEvents.Dispatch(this, "Escape", Params*)
 	}
 	
-	Size()
+	Size(Params*)
 	{
-		return WinEvents.Dispatch(this, "Size")
+		return WinEvents.Dispatch(this, "Size", Params*)
 	}
 	
-	ContextMenu()
+	ContextMenu(Params*)
 	{
-		return WinEvents.Dispatch(this, "ContextMenu")
+		return WinEvents.Dispatch(this, "ContextMenu", Params*)
 	}
 	
-	DropFiles()
+	DropFiles(Params*)
 	{
-		return WinEvents.Dispatch(this, "DropFiles")
+		return WinEvents.Dispatch(this, "DropFiles", Params*)
 	}
 }
 
