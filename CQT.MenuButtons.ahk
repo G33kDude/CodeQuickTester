@@ -8,7 +8,7 @@ class MenuButtons
 	Save()
 	{
 		Gui, +OwnDialogs
-		FileSelectFile, FilePath, S18
+		FileSelectFile, FilePath, S18,, % this.Parent.Title " - Save Code"
 		if ErrorLevel
 			return
 		
@@ -18,7 +18,7 @@ class MenuButtons
 	Open()
 	{
 		Gui, +OwnDialogs
-		FileSelectFile, FilePath, 3
+		FileSelectFile, FilePath, 3,, % this.Parent.Title " - Open Code"
 		if !ErrorLevel
 			this.Parent.LoadCode(FileOpen(FilePath, "r").Read())
 	}
@@ -31,7 +31,7 @@ class MenuButtons
 	Fetch()
 	{
 		Gui, +OwnDialogs
-		InputBox, Url, % this.Parent.Title, Enter a URL to fetch code from.
+		InputBox, Url, % this.Parent.Title " - Fetch Code", Enter a URL to fetch code from.
 		if (Url := Trim(Url))
 			this.Parent.LoadCode(UrlDownloadToVar(Url))
 	}
@@ -75,8 +75,8 @@ class MenuButtons
 	
 	About()
 	{
-		Gui, % this.Parent.hMainWindow ":+OwnDialogs"
-		MsgBox,, % this.Parent.Title, CodeQuickTester written by GeekDude
+		Gui, +OwnDialogs
+		MsgBox,, % this.Parent.Title " - About", CodeQuickTester written by GeekDude
 	}
 	
 	Install()
@@ -84,13 +84,15 @@ class MenuButtons
 		Gui, +OwnDialogs
 		if ServiceHandler.Installed()
 		{
-			MsgBox, 36, , Are you sure you want to remove CodeQuickTester from being the default service handler for "ahk:" links?
+			MsgBox, 36, % this.Parent.Title " - Uninstall Service Handler"
+			, Are you sure you want to remove CodeQuickTester from being the default service handler for "ahk:" links?
 			IfMsgBox, Yes
 				ServiceHandler.Remove()
 		}
 		else
 		{
-			MsgBox, 36, , Are you sure you want to install CodeQuickTester as the default service handler for "ahk:" links?
+			MsgBox, 36, % this.Parent.Title " - Install Service Handler"
+			, Are you sure you want to install CodeQuickTester as the default service handler for "ahk:" links?
 			IfMsgBox, Yes
 				ServiceHandler.Install()
 		}

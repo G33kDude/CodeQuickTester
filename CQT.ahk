@@ -163,7 +163,8 @@ class CodeQuickTester
 		CodeEditor := this.Code
 		if (CodeEditor && CodeEditor != Code) ; TODO: Do I need to Trim() here?
 		{
-			MsgBox, 308, % this.Title, Are you sure you want to overwrite your code?
+			Gui, +OwnDialogs
+			MsgBox, 308, % this.Title " - Confirm Overwrite", Are you sure you want to overwrite your code?
 			IfMsgBox, No
 				return
 		}
@@ -241,7 +242,8 @@ class CodeQuickTester
 	{
 		if Trim(this.Code, " `t`r`n") ; TODO: Check against last saved code
 		{
-			MsgBox, 308, % this.Title, Are you sure you want to exit?
+			Gui, +OwnDialogs
+			MsgBox, 308, % this.Title " - Confirm Exit", Are you sure you want to exit?
 			IfMsgBox, No
 				return true
 		}

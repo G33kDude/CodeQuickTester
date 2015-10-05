@@ -53,7 +53,7 @@ class Paste
 		
 		Link := Ahkbin(this.Parent.Code, PasteName, PasteDesc, PasteChan)
 		
-		MsgBox, 292, % this.Parent.Title, Link received:`n%Link%`n`nCopy to clipboard?
+		MsgBox, 292, % this.Parent.Title " - Pasted", Link received:`n%Link%`n`nCopy to clipboard?
 		IfMsgBox, Yes
 			Clipboard := Link
 	}
