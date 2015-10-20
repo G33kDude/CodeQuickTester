@@ -1,49 +1,45 @@
 class WinEvents ; static class
 {
-	static Table := {}
+	static _ := WinEvents.AutoInit()
 	
-	Register(hWnd, Class, Prefix="Gui")
+	AutoInit()
 	{
-		Gui, +LabelWinEvents.
-		this.Table[hWnd] := {Class: Class, Prefix: Prefix}
+		this.Table := []
+		OnMessage(2, this.Destroy.bind(this))
 	}
 	
-	Unregister(hWnd)
+	Register(ID, HandlerClass, Prefix="Gui")
 	{
+		Gui, %ID%: +hWndhWnd +LabelWinEvents_
+		this.Table[hWnd] := {Class: HandlerClass, Prefix: Prefix}
+	}
+	
+	Unregister(ID)
+	{
+		Gui, %ID%: +hWndhWnd
 		this.Table.Delete(hWnd)
 	}
 	
-	Dispatch(hWnd, Type, Params*)
+	Dispatch(Type, Params*)
 	{
-		Info := this.Table[hWnd]
-		
-		; TODO: Figure out the most efficient way to do [a,b*]*
-		return Info.Class[Info.Prefix . Type].Call([Info.Class, Params*]*)
+		Info := this.Table[Params[1]]
+		return (Info.Class)[Info.Prefix . Type](Params*)
 	}
 	
-	; These *CANNOT* be added dynamically or handled dynamically via __Call
-	Close(Params*)
+	Destroy(wParam, lParam, Msg, hWnd)
 	{
-		return WinEvents.Dispatch(this, "Close", Params*)
+		this.Table.Delete(hWnd)
 	}
-	
-	Escape(Params*)
-	{
-		return WinEvents.Dispatch(this, "Escape", Params*)
-	}
-	
-	Size(Params*)
-	{
-		return WinEvents.Dispatch(this, "Size", Params*)
-	}
-	
-	ContextMenu(Params*)
-	{
-		return WinEvents.Dispatch(this, "ContextMenu", Params*)
-	}
-	
-	DropFiles(Params*)
-	{
-		return WinEvents.Dispatch(this, "DropFiles", Params*)
-	}
+}
+
+WinEvents_Close(Params*) {
+	return WinEvents.Dispatch("Close", Params*)
+} WinEvents_Escape(Params*) {
+	return WinEvents.Dispatch("Escape", Params*)
+} WinEvents_Size(Params*) {
+	return WinEvents.Dispatch("Size", Params*)
+} WinEvents_ContextMenu(Params*) {
+	return WinEvents.Dispatch("ContextMenu", Params*)
+} WinEvents_DropFiles(Params*) {
+	return WinEvents.Dispatch("DropFiles", Params*)
 }

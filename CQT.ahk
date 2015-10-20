@@ -232,7 +232,7 @@ class CodeQuickTester
 		GuiControl, Move, % this.hRunButton, % "x" 5 "y" A_GuiHeight-50 "w" A_GuiWidth-10 "h" 22
 	}
 	
-	GuiDropFiles(Files)
+	GuiDropFiles(hWnd, Files)
 	{
 		; TODO: support multiple file drop
 		this.LoadCode(FileOpen(Files[1], "r").Read())
