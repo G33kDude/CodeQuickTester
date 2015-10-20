@@ -61,6 +61,7 @@ SendMessage(Msg, wParam, lParam, hWnd)
 {
 	; DllCall("SendMessage", "UPtr", hWnd, "UInt", Msg, "UPtr", wParam, "Ptr", lParam, "UPtr")
 	SendMessage, Msg, wParam, lParam,, ahk_id %hWnd%
+	return ErrorLevel
 }
 
 Ahkbin(Content, Name="", Desc="", Channel="")
