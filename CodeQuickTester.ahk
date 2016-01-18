@@ -83,6 +83,9 @@ class CodeQuickTester
 				["&Open`tCtrl+O", Buttons.Open.Bind(Buttons)],
 				["&New`tCtrl+N", Buttons.New.Bind(Buttons)],
 				["&Fetch", Buttons.Fetch.Bind(Buttons)]
+			]], ["&Edit", [
+				["Comment Lines`tCtrl+k", Buttons.Comment.Bind(Buttons)],
+				["Uncomment Lines`tCtrl+Shift+k", Buttons.Uncomment.Bind(Buttons)]
 			]], ["&Tools", [
 				["&Paste`tCtrl+P", Buttons.Paste.Bind(Buttons)],
 				["Re&indent`tCtrl+I", Buttons.Indent.Bind(Buttons)],
@@ -289,7 +292,7 @@ class CodeQuickTester
 		GuiControl, Move, % this.hRunButton, % "x" 5 "y" A_GuiHeight-50 "w" A_GuiWidth-10 "h" 22
 	}
 	
-	GuiDropFiles(Files)
+	GuiDropFiles(hWnd, Files)
 	{
 		; TODO: support multiple file drop
 		this.LoadCode(FileOpen(Files[1], "r").Read())
@@ -449,12 +452,12 @@ class CodeQuickTester
 	{
 		if (this.Parent.AlwaysOnTop := !this.Parent.AlwaysOnTop)
 		{
-			Menu, % this.Parent.Menus[3], Check, &AlwaysOnTop`tAlt+A
+			Menu, % this.Parent.Menus[4], Check, &AlwaysOnTop`tAlt+A
 			Gui, +AlwaysOnTop
 		}
 		else
 		{
-			Menu, % this.Parent.Menus[3], Uncheck, &AlwaysOnTop`tAlt+A
+			Menu, % this.Parent.Menus[4], Uncheck, &AlwaysOnTop`tAlt+A
 			Gui, -AlwaysOnTop
 		}
 	}
@@ -493,6 +496,61 @@ class CodeQuickTester
 				ServiceHandler.Install()
 		}
 	}
+	
+	Comment()
+	{
+		hCodeEditor := this.Parent.hCodeEditor
+		
+		GuiControlGet, Text,, %hCodeEditor%
+		Text := StrSplit(Text, "`n", "`r")
+		
+		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
+		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
+		
+		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
+		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
+		
+		Count := Bottom-Top + 1
+		Loop, % Count
+			Text[A_Index+Top] := ";" Text[A_Index+Top]
+		for each, Line in Text
+			Out .= "`r`n" Line
+		Out := SubStr(Out, 3)
+		
+		GuiControl,, %hCodeEditor%, %Out%
+		
+		NumPut(NumGet(s, "UInt") + 1, &s, "UInt")
+		NumPut(NumGet(s, 4, "UInt") + Count, &s, 4, "UInt")
+		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+	}
+	
+	Uncomment()
+	{
+		hCodeEditor := this.Parent.hCodeEditor
+		
+		GuiControlGet, Text,, %hCodeEditor%
+		Text := StrSplit(Text, "`n", "`r")
+		
+		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
+		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
+		
+		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
+		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
+		
+		Removed := 0
+		Loop, % Bottom-Top + 1
+			if InStr(Text[A_Index+Top], ";") == 1
+				Text[A_Index+Top] := SubStr(Text[A_Index+Top], 2), Removed++
+		for each, Line in Text
+			Out .= "`r`n" Line
+		Out := SubStr(Out, 3)
+		
+		GuiControl,, %hCodeEditor%, %Out%
+		
+		NumPut(NumGet(s, "UInt") - 1, &s, "UInt")
+		NumPut(NumGet(s, 4, "UInt") - Removed, &s, 4, "UInt")
+		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+	}
 }
 
 }
@@ -525,52 +583,48 @@ class ServiceHandler ; static class
 
 class WinEvents ; static class
 {
-	static Table := {}
+	static _ := WinEvents.AutoInit()
 	
-	Register(hWnd, Class, Prefix="Gui")
+	AutoInit()
 	{
-		Gui, +LabelWinEvents.
-		this.Table[hWnd] := {Class: Class, Prefix: Prefix}
+		this.Table := []
+		OnMessage(2, this.Destroy.bind(this))
 	}
 	
-	Unregister(hWnd)
+	Register(ID, HandlerClass, Prefix="Gui")
 	{
+		Gui, %ID%: +hWndhWnd +LabelWinEvents_
+		this.Table[hWnd] := {Class: HandlerClass, Prefix: Prefix}
+	}
+	
+	Unregister(ID)
+	{
+		Gui, %ID%: +hWndhWnd
 		this.Table.Delete(hWnd)
 	}
 	
-	Dispatch(hWnd, Type, Params*)
+	Dispatch(Type, Params*)
 	{
-		Info := this.Table[hWnd]
-		
-		; TODO: Figure out the most efficient way to do [a,b*]*
-		return Info.Class[Info.Prefix . Type].Call([Info.Class, Params*]*)
+		Info := this.Table[Params[1]]
+		return (Info.Class)[Info.Prefix . Type](Params*)
 	}
 	
-	; These *CANNOT* be added dynamically or handled dynamically via __Call
-	Close(Params*)
+	Destroy(wParam, lParam, Msg, hWnd)
 	{
-		return WinEvents.Dispatch(this, "Close", Params*)
+		this.Table.Delete(hWnd)
 	}
-	
-	Escape(Params*)
-	{
-		return WinEvents.Dispatch(this, "Escape", Params*)
-	}
-	
-	Size(Params*)
-	{
-		return WinEvents.Dispatch(this, "Size", Params*)
-	}
-	
-	ContextMenu(Params*)
-	{
-		return WinEvents.Dispatch(this, "ContextMenu", Params*)
-	}
-	
-	DropFiles(Params*)
-	{
-		return WinEvents.Dispatch(this, "DropFiles", Params*)
-	}
+}
+
+WinEvents_Close(Params*) {
+	return WinEvents.Dispatch("Close", Params*)
+} WinEvents_Escape(Params*) {
+	return WinEvents.Dispatch("Escape", Params*)
+} WinEvents_Size(Params*) {
+	return WinEvents.Dispatch("Size", Params*)
+} WinEvents_ContextMenu(Params*) {
+	return WinEvents.Dispatch("ContextMenu", Params*)
+} WinEvents_DropFiles(Params*) {
+	return WinEvents.Dispatch("DropFiles", Params*)
 }
 
 AutoIndent(Code, Indent = "`t", Newline = "`r`n")
@@ -738,6 +792,7 @@ SendMessage(Msg, wParam, lParam, hWnd)
 {
 	; DllCall("SendMessage", "UPtr", hWnd, "UInt", Msg, "UPtr", wParam, "Ptr", lParam, "UPtr")
 	SendMessage, Msg, wParam, lParam,, ahk_id %hWnd%
+	return ErrorLevel
 }
 
 Ahkbin(Content, Name="", Desc="", Channel="")
