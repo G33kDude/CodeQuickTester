@@ -53,12 +53,12 @@ class MenuButtons
 	{
 		if (this.Parent.AlwaysOnTop := !this.Parent.AlwaysOnTop)
 		{
-			Menu, % this.Parent.Menus[3], Check, &AlwaysOnTop`tAlt+A
+			Menu, % this.Parent.Menus[4], Check, &AlwaysOnTop`tAlt+A
 			Gui, +AlwaysOnTop
 		}
 		else
 		{
-			Menu, % this.Parent.Menus[3], Uncheck, &AlwaysOnTop`tAlt+A
+			Menu, % this.Parent.Menus[4], Uncheck, &AlwaysOnTop`tAlt+A
 			Gui, -AlwaysOnTop
 		}
 	}
