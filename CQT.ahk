@@ -25,6 +25,7 @@ class CodeQuickTester
 				["&Save`tCtrl+S", Buttons.Save.Bind(Buttons)],
 				["&Open`tCtrl+O", Buttons.Open.Bind(Buttons)],
 				["&New`tCtrl+N", Buttons.New.Bind(Buttons)],
+				["&Publish", Buttons.Publish.Bind(Buttons)],
 				["&Fetch", Buttons.Fetch.Bind(Buttons)]
 			]], ["&Edit", [
 				["Comment Lines`tCtrl+k", Buttons.Comment.Bind(Buttons)],

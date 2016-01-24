@@ -60,3 +60,4 @@ TesterClose(Tester)
 #Include WinEvents.ahk
 #Include AutoIndent.ahk
 #Include Utils.ahk
+#Include Publish.ahk

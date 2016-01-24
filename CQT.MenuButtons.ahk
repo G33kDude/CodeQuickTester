@@ -28,6 +28,18 @@ class MenuButtons
 		Run, %A_AhkPath% %A_ScriptFullPath%
 	}
 	
+	Publish()
+	{
+		Gui, +OwnDialogs
+		FileSelectFile, FilePath, S18,, % this.Parent.Title " - Publish Code"
+		if ErrorLevel
+			return
+		
+		FileOpen(FilePath, "w").Write(this.Parent.Code)
+		PreprocessScript(Text, FilePath, [])
+		FileOpen(FilePath, "w").Write(Text)
+	}
+	
 	Fetch()
 	{
 		Gui, +OwnDialogs
