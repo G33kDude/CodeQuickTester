@@ -54,7 +54,7 @@ TesterClose(Tester)
 	return
 */
 
-#Include %A_ScriptDir%
+#Include %A_ScriptDir%\lib
 #Include CQT.ahk
 #Include ServiceHandler.ahk
 #Include WinEvents.ahk
