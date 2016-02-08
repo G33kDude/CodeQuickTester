@@ -82,7 +82,7 @@ class MenuButtons
 	
 	Help()
 	{
-		Run, %A_AhkPath%\..\AutoHotkey.chm
+		Run, %A_WinDir%\System32\hh.exe %A_AhkPath%\..\AutoHotkey.chm
 	}
 	
 	About()
