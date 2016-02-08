@@ -57,7 +57,8 @@ class CodeQuickTester
 		
 		; Get starting tester contents
 		FilePath := B_Params[1] ? RegExReplace(B_Params[1], "^ahk:") : this.DefaultPath
-		this.Code := FileExist(FilePath) ? FileOpen(FilePath, "r").Read() : UrlDownloadToVar(FilePath)
+		try
+			this.Code := FileExist(FilePath) ? FileOpen(FilePath, "r").Read() : UrlDownloadToVar(FilePath)
 		if (FilePath == this.DefaultPath)
 			SendMessage, 0x0B1, -1, -1,, % "ahk_id" this.hCodeEditor ; EM_SETSEL bottom of document
 		
