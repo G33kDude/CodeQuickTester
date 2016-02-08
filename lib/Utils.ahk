@@ -1,12 +1,13 @@
 ; Modified from https://github.com/cocobelgica/AutoHotkey-Util/blob/master/ExecScript.ahk
 ExecScript(Script, Params="", AhkPath="")
 {
-	Name := "AHK_CQT_" A_TickCount
+	static Shell := ComObjCreate("WScript.Shell")
+	Name := "\\.\pipe\AHK_CQT_" A_TickCount
 	Pipe := []
-	Loop, 2
+	Loop, 3
 	{
 		Pipe[A_Index] := DllCall("CreateNamedPipe"
-		, "Str", "\\.\pipe\" name
+		, "Str", Name
 		, "UInt", 2, "UInt", 0
 		, "UInt", 255, "UInt", 0
 		, "UInt", 0, "UPtr", 0
@@ -14,14 +15,20 @@ ExecScript(Script, Params="", AhkPath="")
 	}
 	if !FileExist(AhkPath)
 		throw Exception("AutoHotkey runtime not found: " AhkPath)
-	Call = "%AhkPath%" /CP65001 "\\.\pipe\%Name%"
-	Shell := ComObjCreate("WScript.Shell")
-	Exec := Shell.Exec(Call " " Params)
-	DllCall("ConnectNamedPipe", "UPtr", Pipe[1], "UPtr", 0)
-	DllCall("CloseHandle", "UPtr", Pipe[1])
-	DllCall("ConnectNamedPipe", "UPtr", Pipe[2], "UPtr", 0)
-	FileOpen(Pipe[2], "h", "UTF-8").Write(Script)
-	DllCall("CloseHandle", "UPtr", Pipe[2])
+	if FileExist(Name)
+	{
+		Exec := Shell.Exec(AhkPath " /CP65001 " Name " " Params)
+		DllCall("ConnectNamedPipe", "UPtr", Pipe[2], "UPtr", 0)
+		DllCall("ConnectNamedPipe", "UPtr", Pipe[3], "UPtr", 0)
+		FileOpen(Pipe[3], "h", "UTF-8").Write(Script)
+	}
+	else ; Running under WINE with improperly implemented pipes
+	{
+		FileOpen(Name := "AHK_CQT_TMP.ahk", "w").Write(Script)
+		Exec := Shell.Exec(AhkPath " /CP65001 " Name " " Params)
+	}
+	Loop, 3
+		DllCall("CloseHandle", "UPtr", Pipe[A_Index])
 	return Exec
 }
 
