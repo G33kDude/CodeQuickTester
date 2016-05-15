@@ -17,6 +17,8 @@ class CodeQuickTester
 		this.Bound.CheckIfRunning := this.CheckIfRunning.Bind(this)
 		
 		Buttons := new this.MenuButtons(this)
+		this.Bound.Indent := Buttons.Indent.Bind(Buttons)
+		this.Bound.Unindent := Buttons.Unindent.Bind(Buttons)
 		Menus :=
 		( Join
 		[
@@ -29,10 +31,12 @@ class CodeQuickTester
 				["&Fetch", Buttons.Fetch.Bind(Buttons)]
 			]], ["&Edit", [
 				["Comment Lines`tCtrl+k", Buttons.Comment.Bind(Buttons)],
-				["Uncomment Lines`tCtrl+Shift+k", Buttons.Uncomment.Bind(Buttons)]
+				["Uncomment Lines`tCtrl+Shift+k", Buttons.Uncomment.Bind(Buttons)],
+				["Indent Lines", this.Bound.Indent],
+				["Unindent Lines", this.Bound.Unindent]
 			]], ["&Tools", [
 				["&Paste`tCtrl+P", Buttons.Paste.Bind(Buttons)],
-				["Re&indent`tCtrl+I", Buttons.Indent.Bind(Buttons)],
+				["Re&indent`tCtrl+I", Buttons.AutoIndent.Bind(Buttons)],
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["Parameters", Buttons.Params.Bind(Buttons)],
 				["Install", Buttons.Install.Bind(Buttons)]
@@ -186,8 +190,12 @@ class CodeQuickTester
 				if (wParam == GetKeyVK("Tab"))
 				{
 					ControlGet, Selected, Selected,,, % "ahk_id" this.hCodeEditor
-					if (Selected == "")
+					if (Selected == "" && !GetKeyState("Shift"))
 						SendMessage, 0xC2, 1, &(x:="`t"),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
+					else if GetKeyState("Shift")
+						this.Bound.Unindent()
+					else
+						this.Bound.Indent()
 					this.UpdateStatusBar()
 					return False
 				}

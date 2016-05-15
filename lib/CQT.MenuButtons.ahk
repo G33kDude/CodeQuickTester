@@ -75,7 +75,7 @@ class MenuButtons
 		}
 	}
 	
-	Indent()
+	AutoIndent()
 	{
 		this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))
 	}
@@ -153,6 +153,61 @@ class MenuButtons
 		Removed := 0
 		Loop, % Bottom-Top + 1
 			if InStr(Text[A_Index+Top], ";") == 1
+				Text[A_Index+Top] := SubStr(Text[A_Index+Top], 2), Removed++
+		for each, Line in Text
+			Out .= "`r`n" Line
+		Out := SubStr(Out, 3)
+		
+		GuiControl,, %hCodeEditor%, %Out%
+		
+		NumPut(NumGet(s, "UInt") - 1, &s, "UInt")
+		NumPut(NumGet(s, 4, "UInt") - Removed, &s, 4, "UInt")
+		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+	}
+	
+	Indent()
+	{
+		hCodeEditor := this.Parent.hCodeEditor
+		
+		GuiControlGet, Text,, %hCodeEditor%
+		Text := StrSplit(Text, "`n", "`r")
+		
+		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
+		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
+		
+		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
+		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
+		
+		Count := Bottom-Top + 1
+		Loop, % Count
+			Text[A_Index+Top] := "`t" Text[A_Index+Top]
+		for each, Line in Text
+			Out .= "`r`n" Line
+		Out := SubStr(Out, 3)
+		
+		GuiControl,, %hCodeEditor%, %Out%
+		
+		NumPut(NumGet(s, "UInt") + 1, &s, "UInt")
+		NumPut(NumGet(s, 4, "UInt") + Count, &s, 4, "UInt")
+		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+	}
+	
+	Unindent()
+	{
+		hCodeEditor := this.Parent.hCodeEditor
+		
+		GuiControlGet, Text,, %hCodeEditor%
+		Text := StrSplit(Text, "`n", "`r")
+		
+		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
+		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
+		
+		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
+		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
+		
+		Removed := 0
+		Loop, % Bottom-Top + 1
+			if InStr(Text[A_Index+Top], "`t") == 1
 				Text[A_Index+Top] := SubStr(Text[A_Index+Top], 2), Removed++
 		for each, Line in Text
 			Out .= "`r`n" Line
