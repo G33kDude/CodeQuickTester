@@ -14,16 +14,48 @@ FileEncoding, UTF-8
 ; TODO: Add right click menu
 ; TODO: Add params menu
 
-Settings := {"DefaultName": "GeekDude"
-, "DefaultDesc": ""
-, "FGColor": 0xCDEDED
-, "BGColor": 0x3F3F3F
-, "TabSize": 4
-, "Indent": "`t"
-, "TypeFace": "Microsoft Sans Serif"
-, "Font": "s8 wNorm"
-, "CodeTypeFace": "Consolas"
-, "CodeFont": "s9 wBold"}
+Settings :=
+( LTrim Join Comments
+{
+	"Font": {
+		"Typeface": "Microsoft Sans Serif",
+		"Size": 8,
+		"Bold": False
+	},
+	
+	; Editor (colors are 0xBBGGRR)
+	"FGColor": 0xCDEDED,
+	"BGColor": 0x3F3F3F,
+	"TabSize": 4,
+	"CodeFont": {
+		"Typeface": "Consolas",
+		"Size": 9,
+		"Bold": True
+	},
+	
+	; Highlighter (colors are 0xRRGGBB)
+	"UseHighlighter": True,
+	"Colors": [
+		0x97C0EB, ; Punctuation
+		0xF79B57, ; Numbers
+		0x7F9F7F, ; Comments
+		0xCC9893, ; Strings
+		0x7CC8CF, ; Directives
+		0x7F9F7F, ; Multiline comments
+		0xF79B57, ; A_Constants
+		0xE4EDED, ; Flow
+		0xCDBFA3, ; Commands
+		0x7CC8CF, ; Functions
+		0xCB8DD9, ; Keynames
+		0xE4EDED, ; Other keywords
+		0xEDEDCD  ; Text
+	],
+	
+	; Pastebin
+	"DefaultName": "GeekDude",
+	"DefaultDesc": ""
+}
+)
 
 Tester := new CodeQuickTester(Settings)
 Tester.RegisterCloseCallback(Func("TesterClose"))
@@ -61,3 +93,4 @@ TesterClose(Tester)
 #Include AutoIndent.ahk
 #Include Utils.ahk
 #Include Publish.ahk
+#Include Highlight.ahk

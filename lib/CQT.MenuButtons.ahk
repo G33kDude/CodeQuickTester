@@ -75,6 +75,15 @@ class MenuButtons
 		}
 	}
 	
+	Highlighter()
+	{
+		if (this.Parent.Settings.UseHighlighter := !this.Parent.Settings.UseHighlighter)
+			Menu, % this.Parent.Menus[4], Check, &Highlighter
+		else
+			Menu, % this.Parent.Menus[4], Uncheck, &Highlighter
+		this.Parent.Code := this.Parent.Code
+	}
+	
 	AutoIndent()
 	{
 		this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))

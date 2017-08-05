@@ -15,6 +15,7 @@ class CodeQuickTester
 		this.Bound.OnMessage := this.OnMessage.Bind(this)
 		this.Bound.UpdateStatusBar := this.UpdateStatusBar.Bind(this)
 		this.Bound.CheckIfRunning := this.CheckIfRunning.Bind(this)
+		this.Bound.Highlight := this.Highlight.Bind(this)
 		
 		Buttons := new this.MenuButtons(this)
 		this.Bound.Indent := Buttons.Indent.Bind(Buttons)
@@ -38,6 +39,7 @@ class CodeQuickTester
 				["&Paste`tCtrl+P", Buttons.Paste.Bind(Buttons)],
 				["Re&indent`tCtrl+I", Buttons.AutoIndent.Bind(Buttons)],
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
+				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
 				["Parameters", Buttons.Params.Bind(Buttons)],
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
@@ -54,10 +56,20 @@ class CodeQuickTester
 		Gui, Menu, % this.Menus[1]
 		Gui, Margin, 5, 5
 		
+		; If set as default, check the highlighter option
+		if this.Settings.UseHighlighter
+			Menu, % this.Menus[4], Check, &Highlighter
+		
 		; Add code editor
-		Gui, Font, % this.Settings.CodeFont, % this.Settings.CodeTypeFace
+		Gui, Font
+		, % "s" this.Settings.CodeFont.Size
+		. " w" (this.Settings.CodeFont.Bold ? "Bold" : "Norm")
+		, % this.Settings.CodeFont.Typeface
 		this.InitRichEdit()
-		Gui, Font, % this.Settings.Font, % this.Settings.TypeFace
+		Gui, Font
+		, % "s" this.Settings.Font.Size
+		. " w" (this.Settings.Font.Bold ? "Bold" : "Norm")
+		, % this.Settings.Font.Typeface
 		
 		; Get starting tester contents
 		FilePath := B_Params[1] ? RegExReplace(B_Params[1], "^ahk:") : this.DefaultPath
@@ -101,15 +113,12 @@ class CodeQuickTester
 		NumPut(Settings.FGColor, CharFormat, 20, "UInt") ; crTextColor := 0xBBGGRR
 		SendMessage, 0x444, 0, &CharFormat,, ahk_id %hCodeEditor% ; EM_SETCHARFORMAT
 		
-		; Set tab size to 4
+		; Set tab size to 4 for non-highlighted code
 		VarSetCapacity(TabStops, 4, 0), NumPut(Settings.TabSize*4, TabStops, "UInt")
 		SendMessage, 0x0CB, 1, &TabStops,, ahk_id %hCodeEditor% ; EM_SETTABSTOPS
 		
 		; Change text limit from 32,767 to max
 		SendMessage, 0x435, 0, -1,, ahk_id %hCodeEditor% ; EM_EXLIMITTEXT
-		
-		; Disable inconsistent formatting
-		SendMessage, 0x4CC, 1, 1,, ahk_id %hCodeEditor% ; EM_SETEDITSTYLE SES_EMULATESYSEDIT
 	}
 	
 	Code[]
@@ -120,7 +129,9 @@ class CodeQuickTester
 		}
 		
 		set {
+			; TODO: Make more efficient by sending text directly to highlighter
 			GuiControl,, % this.hCodeEditor, %Value%
+			this.Highlight()
 			return Value
 		}
 	}
@@ -201,6 +212,11 @@ class CodeQuickTester
 				}
 				else if (wParam == GetKeyVK("Escape"))
 					return False
+				else if (wParam == GetKeyVK("v") && GetKeyState("Ctrl"))
+				{
+					SendMessage, 0xC2, 1, &(x:=Clipboard),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
+					return False
+				}
 			}
 			
 			; Call UpdateStatusBar after the edit handles the keystroke
@@ -232,6 +248,69 @@ class CodeQuickTester
 		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
 		Len := Right - Left - (Right > Len) ; > is a workaround for being able to select the end of the document with RE
 		SB_SetText(Len > 0 ? "Selection Length: " Len : "", 4) ; >0 because sometimes it comes up as -1 if you hold down paste
+		
+		SetTimer(this.Bound.Highlight, -200)
+	}
+	
+	Highlight()
+	{
+		if !this.Settings.UseHighlighter
+			return
+		
+		hCodeEditor := this.hCodeEditor
+		
+		; Buffer any input events while the highlighter is running
+		Crit := A_IsCritical
+		Critical, 1000
+		
+		; Run the highlighter
+		Text := Highlight(this.Code, this.Settings)
+		
+		; "TRichEdit suspend/resume undo function"
+		; https://stackoverflow.com/a/21206620
+		
+		; Get the ITextDocument object
+		EM_GETOLEINTERFACE:=(0x400 + 60)
+		VarSetCapacity(pIRichEditOle, A_PtrSize, 0)
+		SendMessage, EM_GETOLEINTERFACE, 0, &pIRichEditOle,, ahk_id %hCodeEditor%
+		pIRichEditOle := NumGet(pIRichEditOle, 0, "UPtr")
+		IID_ITextDocument := "{8CC497C0-A1DF-11CE-8098-00AA0047BE5D}"
+		IRichEditOle := ComObject(9, pIRichEditOle, 1), ObjAddRef(pIRichEditOle)
+		pITextDocument := ComObjQuery(IRichEditOle, IID_ITextDocument)
+		ITextDocument := ComObject(9, pITextDocument, 1), ObjAddRef(pITextDocument)
+		
+		; Freeze the renderer and suspend the undo buffer
+		ITextDocument.Freeze()
+		ITextDocument.Undo(-9999995) ; tomSuspend
+		
+		; Save the text to a UTF-8 buffer
+		VarSetCapacity(Buf, StrPut(Text, "UTF-8"), 0)
+		StrPut(Text, &Buf, "UTF-8")
+		
+		; Set up the necessary structs
+		VarSetCapacity(POINT    , 8, 0) ; Scroll position
+		VarSetCapacity(CHARRANGE, 8, 0) ; Selection
+		VarSetCapacity(SETTEXTEX, 8, 0) ; SetText Settings
+		NumPut(1, SETTEXTEX, 0, "UInt") ; flags = ST_KEEPUNDO
+		
+		; Save the scroll and cursor positions, update the text,
+		; then restore the scroll and cursor positions
+		SendMessage, 0x4DD, 0, &POINT,, ahk_id %hCodeEditor% ; EM_GETSCROLLPOS
+		SendMessage, 0x434, 0, &CHARRANGE,, ahk_id %hCodeEditor% ; EM_EXGETSEL
+		SendMessage, 0x461, &SETTEXTEX, &Buf,, ahk_id %hCodeEditor% ; EM_SETTEXTEX
+		SendMessage, 0x437, 0, &CHARRANGE,, ahk_id %hCodeEditor% ; EM_EXSETSEL
+		SendMessage, 0x4DE, 0, &POINt,, ahk_id %hCodeEditor% ; EM_SETSCROLLPOS
+		
+		; Resume the undo buffer and unfreeze the renderer
+		ITextDocument.Undo(-9999994) ; tomResume
+		ITextDocument.Unfreeze()
+		
+		; Release the ITextDocument object
+		ITextDocument := "", IRichEditOle := ""
+		ObjRelease(pIRichEditOle), ObjRelease(pITextDocument)
+		
+		; Resume event processing
+		Critical, %Crit%
 	}
 	
 	RegisterCloseCallback(CloseCallback)
