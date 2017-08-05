@@ -36,7 +36,7 @@ class CodeQuickTester
 				["Indent Lines", this.Bound.Indent],
 				["Unindent Lines", this.Bound.Unindent]
 			]], ["&Tools", [
-				["&Paste`tCtrl+P", Buttons.Paste.Bind(Buttons)],
+				["&Pastebin`tCtrl+P", Buttons.Paste.Bind(Buttons)],
 				["Re&indent`tCtrl+I", Buttons.AutoIndent.Bind(Buttons)],
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],

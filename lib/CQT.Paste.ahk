@@ -27,7 +27,7 @@ class Paste
 		this.hPasteChan := hPasteChan
 		
 		PostMessage, 0x153, -1, 22-6,, ahk_id %hPasteChan% ; Set height of ComboBox
-		Gui, Show,, % this.Parent.Title " - Paste"
+		Gui, Show,, % this.Parent.Title " - Pastebin"
 		
 		WinEvents.Register(this.hWnd, this)
 	}
