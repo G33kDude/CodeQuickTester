@@ -21,7 +21,7 @@ class CodeQuickTester
 		this.Bound.Indent := Buttons.Indent.Bind(Buttons)
 		this.Bound.Unindent := Buttons.Unindent.Bind(Buttons)
 		Menus :=
-		( Join
+		( LTrim Join Comments
 		[
 			["&File", [
 				["&Run`tF5", this.Bound.RunButton],
@@ -40,7 +40,7 @@ class CodeQuickTester
 				["Re&indent`tCtrl+I", Buttons.AutoIndent.Bind(Buttons)],
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
-				["Parameters", Buttons.Params.Bind(Buttons)],
+				; ["Parameters", Buttons.Params.Bind(Buttons)],
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
