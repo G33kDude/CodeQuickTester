@@ -16,11 +16,11 @@ Highlight(ByRef Code, Settings)
 		|((?:^|\s)#[^ \t\r\n,]+)              ; Directives
 		|(^\s*\/\*.+?\n\s*\*\/)               ; Multiline comments
 		|\b(A_\w*|%Group5%)\b                 ; Builtins
-		|\b(%Flow%)\b                         ; Flow
-		|\b(%Commands%)\b                     ; Commands
-		|\b(%Functions%)\b                    ; Functions
-		|\b(%Builtins%)\b                     ; Keynames
-		|\b(%Keywords%)\b                     ; Other keywords
+		|\b(" Flow ")\b                       ; Flow
+		|\b(" Commands ")\b                   ; Commands
+		|\b(" Functions ")\b                  ; Functions
+		|\b(" Builtins ")\b                   ; Keynames
+		|\b(" Keywords ")\b                   ; Other keywords
 	)"
 	
 	FontTable := "{\fonttbl{\f0\fnil\fcharset0 "
