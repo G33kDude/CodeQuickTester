@@ -51,6 +51,9 @@ Settings :=
 		0xEDEDCD  ; Text
 	],
 	
+	; Auto-Indenter
+	"Indent": "`t",
+	
 	; Pastebin
 	"DefaultName": "GeekDude",
 	"DefaultDesc": ""
