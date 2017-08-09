@@ -129,9 +129,10 @@ class CodeQuickTester
 		}
 		
 		set {
-			; TODO: Make more efficient by sending text directly to highlighter
-			GuiControl,, % this.hCodeEditor, %Value%
-			this.Highlight()
+			if this.Settings.UseHighlighter
+				this.Highlight(Value)
+			else
+				GuiControl,, % this.hCodeEditor, %Value%
 			return Value
 		}
 	}
@@ -252,7 +253,7 @@ class CodeQuickTester
 		SetTimer(this.Bound.Highlight, -200)
 	}
 	
-	Highlight()
+	Highlight(NewCode:="")
 	{
 		if !this.Settings.UseHighlighter
 			return
@@ -264,7 +265,7 @@ class CodeQuickTester
 		Critical, 1000
 		
 		; Run the highlighter
-		Text := Highlight(this.Code, this.Settings)
+		Text := Highlight(NewCode == "" ? this.Code : NewCode, this.Settings)
 		
 		; "TRichEdit suspend/resume undo function"
 		; https://stackoverflow.com/a/21206620
