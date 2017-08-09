@@ -280,8 +280,14 @@ class CodeQuickTester
 		ITextDocument := ComObject(9, pITextDocument, 1), ObjAddRef(pITextDocument)
 		
 		; Freeze the renderer and suspend the undo buffer
-		ITextDocument.Freeze()
-		ITextDocument.Undo(-9999995) ; tomSuspend
+		try
+		{
+			; Not implemented in WINE
+			ITextDocument.Freeze()
+			ITextDocument.Undo(-9999995) ; tomSuspend
+		}
+		catch
+			GuiControl, -Redraw, %hCodeEditor%
 		
 		; Save the text to a UTF-8 buffer
 		VarSetCapacity(Buf, StrPut(Text, "UTF-8"), 0)
@@ -302,8 +308,14 @@ class CodeQuickTester
 		SendMessage, 0x4DE, 0, &POINt,, ahk_id %hCodeEditor% ; EM_SETSCROLLPOS
 		
 		; Resume the undo buffer and unfreeze the renderer
-		ITextDocument.Undo(-9999994) ; tomResume
-		ITextDocument.Unfreeze()
+		try
+		{
+			; Not implemented in WINE
+			ITextDocument.Undo(-9999994) ; tomResume
+			ITextDocument.Unfreeze()
+		}
+		catch
+			GuiControl, +Redraw, %hCodeEditor%
 		
 		; Release the ITextDocument object
 		ITextDocument := "", IRichEditOle := ""
