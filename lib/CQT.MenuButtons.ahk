@@ -123,8 +123,7 @@ class MenuButtons
 	{
 		hCodeEditor := this.Parent.hCodeEditor
 		
-		GuiControlGet, Text,, %hCodeEditor%
-		Text := StrSplit(Text, "`n", "`r")
+		Text := StrSplit(this.Parent.Code, "`n", "`r")
 		
 		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
 		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
@@ -139,7 +138,7 @@ class MenuButtons
 			Out .= "`r`n" Line
 		Out := SubStr(Out, 3)
 		
-		GuiControl,, %hCodeEditor%, %Out%
+		this.Parent.Code := Out
 		
 		NumPut(NumGet(s, "UInt") + 1, &s, "UInt")
 		NumPut(NumGet(s, 4, "UInt") + Count, &s, 4, "UInt")
@@ -150,8 +149,7 @@ class MenuButtons
 	{
 		hCodeEditor := this.Parent.hCodeEditor
 		
-		GuiControlGet, Text,, %hCodeEditor%
-		Text := StrSplit(Text, "`n", "`r")
+		Text := StrSplit(this.Parent.Code, "`n", "`r")
 		
 		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
 		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
@@ -167,7 +165,7 @@ class MenuButtons
 			Out .= "`r`n" Line
 		Out := SubStr(Out, 3)
 		
-		GuiControl,, %hCodeEditor%, %Out%
+		this.Parent.Code := Out
 		
 		NumPut(NumGet(s, "UInt") - 1, &s, "UInt")
 		NumPut(NumGet(s, 4, "UInt") - Removed, &s, 4, "UInt")
@@ -178,8 +176,7 @@ class MenuButtons
 	{
 		hCodeEditor := this.Parent.hCodeEditor
 		
-		GuiControlGet, Text,, %hCodeEditor%
-		Text := StrSplit(Text, "`n", "`r")
+		Text := StrSplit(this.Parent.Code, "`n", "`r")
 		
 		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
 		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
@@ -194,7 +191,7 @@ class MenuButtons
 			Out .= "`r`n" Line
 		Out := SubStr(Out, 3)
 		
-		GuiControl,, %hCodeEditor%, %Out%
+		this.Parent.Code := Out
 		
 		NumPut(NumGet(s, "UInt") + 1, &s, "UInt")
 		NumPut(NumGet(s, 4, "UInt") + Count, &s, 4, "UInt")
@@ -205,8 +202,7 @@ class MenuButtons
 	{
 		hCodeEditor := this.Parent.hCodeEditor
 		
-		GuiControlGet, Text,, %hCodeEditor%
-		Text := StrSplit(Text, "`n", "`r")
+		Text := StrSplit(this.Parent.Code, "`n", "`r")
 		
 		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
 		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
@@ -222,7 +218,7 @@ class MenuButtons
 			Out .= "`r`n" Line
 		Out := SubStr(Out, 3)
 		
-		GuiControl,, %hCodeEditor%, %Out%
+		this.Parent.Code := Out
 		
 		NumPut(NumGet(s, "UInt") - 1, &s, "UInt")
 		NumPut(NumGet(s, 4, "UInt") - Removed, &s, 4, "UInt")
