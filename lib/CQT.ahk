@@ -103,6 +103,13 @@ class CodeQuickTester
 		Gui, Add, Custom, ClassRichEdit50W hWndhCodeEditor +0x5031b1c4 +E0x20000
 		this.hCodeEditor := hCodeEditor
 		
+		; Register for WM_COMMAND and WM_NOTIFY events
+		; NOTE: this prevents garbage collection of
+		; the class until the control is destroyed
+		SendMessage, 0x445, 0, 1,, ahk_id %hCodeEditor% ; EM_SETEVENTMASK ENM_CHANGE
+		CtrlEvent := this.CtrlEvent.Bind(this)
+		GuiControl, +g, %hCodeEditor%, %CtrlEvent%
+		
 		; Set background color
 		SendMessage, 0x443, 0, Settings.BGColor,, ahk_id %hCodeEditor% ; EM_SETBKGNDCOLOR
 		
@@ -226,6 +233,15 @@ class CodeQuickTester
 		}
 	}
 	
+	CtrlEvent(CtrlHwnd, GuiEvent, EventInfo, _ErrorLevel:="")
+	{
+		if (GuiEvent == "Normal" && EventInfo == 0x300) ; EN_CHANGE
+		{
+			; Delay until the user is finished changing the document
+			SetTimer(this.Bound.Highlight, -200)
+		}
+	}
+	
 	UpdateStatusBar()
 	{
 		; Delete the timer if it was called by one
@@ -250,8 +266,6 @@ class CodeQuickTester
 		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
 		Len := Right - Left - (Right > Len) ; > is a workaround for being able to select the end of the document with RE
 		SB_SetText(Len > 0 ? "Selection Length: " Len : "", 4) ; >0 because sometimes it comes up as -1 if you hold down paste
-		
-		SetTimer(this.Bound.Highlight, -200)
 	}
 	
 	Highlight(NewCode:="")
@@ -281,7 +295,8 @@ class CodeQuickTester
 		pITextDocument := ComObjQuery(IRichEditOle, IID_ITextDocument)
 		ITextDocument := ComObject(9, pITextDocument, 1), ObjAddRef(pITextDocument)
 		
-		; Freeze the renderer and suspend the undo buffer
+		; Ignore changes, freeze the renderer, and suspend the undo buffer
+		SendMessage, 0x445, 0, 0,, ahk_id %hCodeEditor% ; EM_SETEVENTMASK ENM_NONE
 		try
 		{
 			; Not implemented in WINE
@@ -309,7 +324,7 @@ class CodeQuickTester
 		SendMessage, 0x437, 0, &CHARRANGE,, ahk_id %hCodeEditor% ; EM_EXSETSEL
 		SendMessage, 0x4DE, 0, &POINt,, ahk_id %hCodeEditor% ; EM_SETSCROLLPOS
 		
-		; Resume the undo buffer and unfreeze the renderer
+		; Resume the undo buffer, unfreeze the renderer, and listen for changes
 		try
 		{
 			; Not implemented in WINE
@@ -318,6 +333,7 @@ class CodeQuickTester
 		}
 		catch
 			GuiControl, +Redraw, %hCodeEditor%
+		SendMessage, 0x445, 0, 1,, ahk_id %hCodeEditor% ; EM_SETEVENTMASK ENM_CHANGE
 		
 		; Release the ITextDocument object
 		ITextDocument := "", IRichEditOle := ""
