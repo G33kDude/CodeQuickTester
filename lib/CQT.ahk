@@ -216,6 +216,7 @@ class CodeQuickTester
 				else if (wParam == GetKeyVK("v") && GetKeyState("Ctrl"))
 				{
 					SendMessage, 0xC2, 1, &(x:=Clipboard),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
+					this.UpdateStatusBar()
 					return False
 				}
 			}
