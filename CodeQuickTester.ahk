@@ -35,6 +35,7 @@ Settings :=
 	
 	; Highlighter (colors are 0xRRGGBB)
 	"UseHighlighter": True,
+	"HighlightDelay": 200, ; Delay until the user is finished typing
 	"Colors": [
 		0x7F9F7F, ; Comments
 		0x7F9F7F, ; Multiline comments

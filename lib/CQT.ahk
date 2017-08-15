@@ -238,7 +238,7 @@ class CodeQuickTester
 		if (GuiEvent == "Normal" && EventInfo == 0x300) ; EN_CHANGE
 		{
 			; Delay until the user is finished changing the document
-			SetTimer(this.Bound.Highlight, -200)
+			SetTimer(this.Bound.Highlight, -Abs(this.Settings.HighlightDelay))
 		}
 	}
 	
