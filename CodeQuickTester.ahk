@@ -29,8 +29,8 @@ Settings :=
 	"TabSize": 4,
 	"CodeFont": {
 		"Typeface": "Consolas",
-		"Size": 9,
-		"Bold": True
+		"Size": 11,
+		"Bold": False
 	},
 	
 	; Highlighter (colors are 0xRRGGBB)
