@@ -9,18 +9,19 @@ Highlight(ByRef Code, Settings)
 	, Needle := "
 	( LTrim Join Comments
 		ODims)
-		([+*!~&\/\\<>^|=?:(),.```%{}\[\]\-]+) ; Punctuation
-		|(0x[0-9a-fA-F]+|[0-9]+)              ; Numbers
-		|((?:^|\s);[^\n]+)                    ; Comments
-		|(""[^""\r\n]*"")                     ; Strings
-		|((?:^|\s)#[^ \t\r\n,]+)              ; Directives
-		|(^\s*\/\*.+?\n\s*\*\/)               ; Multiline comments
-		|\b(A_\w*|%Group5%)\b                 ; Builtins
-		|\b(" Flow ")\b                       ; Flow
-		|\b(" Commands ")\b                   ; Commands
-		|\b(" Functions ")\b                  ; Functions
-		|\b(" Builtins ")\b                   ; Keynames
-		|\b(" Keywords ")\b                   ; Other keywords
+		((?:^|\s);[^\n]+)         ; Comments
+		|(^\s*\/\*.+?\n\s*\*\/)   ; Multiline comments
+		|((?:^|\s)#[^ \t\r\n,]+)  ; Directives
+		|([+*!~&\/\\<>^|=?:
+			,().```%{}\[\]\-]+)   ; Punctuation
+		|(0x[0-9a-fA-F]+|[0-9]+)  ; Numbers
+		|(""[^""\r\n]*"")         ; Strings
+		|\b(A_\w*|" Builtins ")\b ; A_Builtins
+		|\b(" Flow ")\b           ; Flow
+		|\b(" Commands ")\b       ; Commands
+		|\b(" Functions ")\b      ; Functions
+		|\b(" Keynames ")\b       ; Keynames
+		|\b(" Keywords ")\b       ; Other keywords
 	)"
 	
 	FontTable := "{\fonttbl{\f0\fnil\fcharset0 "

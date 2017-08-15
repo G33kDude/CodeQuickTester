@@ -36,13 +36,13 @@ Settings :=
 	; Highlighter (colors are 0xRRGGBB)
 	"UseHighlighter": True,
 	"Colors": [
+		0x7F9F7F, ; Comments
+		0x7F9F7F, ; Multiline comments
+		0x7CC8CF, ; Directives
 		0x97C0EB, ; Punctuation
 		0xF79B57, ; Numbers
-		0x7F9F7F, ; Comments
 		0xCC9893, ; Strings
-		0x7CC8CF, ; Directives
-		0x7F9F7F, ; Multiline comments
-		0xF79B57, ; A_Constants
+		0xF79B57, ; A_Builtins
 		0xE4EDED, ; Flow
 		0xCDBFA3, ; Commands
 		0x7CC8CF, ; Functions
