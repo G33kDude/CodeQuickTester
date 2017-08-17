@@ -8,11 +8,11 @@ class MenuButtons
 	Save()
 	{
 		Gui, +OwnDialogs
-		FileSelectFile, FilePath, S18,, % this.Parent.Title " - Save Code"
+		FileSelectFile, FilePath, S18,, % this.Parent.Title " - Save Code", AutoHotkey Scripts (*.ahk)
 		if ErrorLevel
 			return
-		
-		FileOpen(FilePath, "w").Write(this.Parent.Code)
+			
+		FileOpen(FilePath ".ahk", "w").Write(this.Parent.Code)
 	}
 	
 	Open()
@@ -25,7 +25,7 @@ class MenuButtons
 	
 	New() ; TODO: Make this work for MultiTester mode
 	{
-		Run, %A_AhkPath% %A_ScriptFullPath%
+		Run, "%A_AhkPath%" "%A_ScriptFullPath%"
 	}
 	
 	Publish()
