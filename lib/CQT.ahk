@@ -200,14 +200,13 @@ class CodeQuickTester
 				return true
 		}
 		
-		; TODO: Finish auto-script-kill
-		if (this.Exec.Status == 0) ; Runnning
+		if (this.Exec.Status == 0) ; Running
 		{
 			SetTimer(this.Bound.CheckIfRunning, "Delete")
 			this.Exec.Terminate()
 		}
 		
-		; Relase wm_message hooks
+		; Release wm_message hooks
 		for each, Msg in [0x100, 0x201, 0x202, 0x204] ; WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
 			OnMessage(Msg, this.Bound.OnMessage, 0)
 		
@@ -217,8 +216,7 @@ class CodeQuickTester
 		; Release WinEvents handler
 		WinEvents.Unregister(this.hMainWindow)
 		
-		; Relase GUI window and control glabels
-		GuiControl, -g, % this.hRunButton ; TODO: Remove once -g bug is fixed
+		; Release GUI window and control glabels
 		Gui, Destroy
 		
 		; Release menu bar (Has to be done after Gui, Destroy)

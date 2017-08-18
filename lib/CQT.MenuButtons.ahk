@@ -26,7 +26,7 @@ class MenuButtons
 			this.Parent.LoadCode(FileOpen(FilePath, "r").Read())
 	}
 	
-	New() ; TODO: Make this work for MultiTester mode
+	New()
 	{
 		Run, %A_AhkPath% %A_ScriptFullPath%
 	}

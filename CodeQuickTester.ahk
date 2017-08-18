@@ -10,10 +10,6 @@ Loop, %0%
 Menu, Tray, Icon, %A_AhkPath%, 2
 FileEncoding, UTF-8
 
-; TODO: Figure out why it gets sometimes gets stuck on "Kill" when using MultiTester
-; TODO: Add right click menu
-; TODO: Add params menu
-
 Settings :=
 ( LTrim Join Comments
 {
@@ -72,22 +68,6 @@ TesterClose(Tester)
 {
 	ExitApp
 }
-
-/* MultiTester
-	ScriptPID := DllCall("GetCurrentProcessId")
-	Testers := []
-	Testers[new CodeQuickTester()] := True
-	return
-	
-	#If WinActive("ahk_pid" ScriptPID)
-	^n::Testers[new CodeQuickTester()] := True
-	#If
-	
-	~*Escape::
-	for Tester in Testers
-		Tester.Exec.Terminate()
-	return
-*/
 
 #Include %A_ScriptDir%\RichCode.ahk\RichCode.ahk
 #Include %A_ScriptDir%\RichCode.ahk\Highlighters\AHK.ahk
