@@ -25,7 +25,7 @@ class MenuButtons
 	
 	New() ; TODO: Make this work for MultiTester mode
 	{
-		Run, %A_AhkPath% %A_ScriptFullPath%
+		Run, "%A_AhkPath%" "%A_ScriptFullPath%"
 	}
 	
 	Publish()
