@@ -90,7 +90,7 @@ class CodeQuickTester
 		
 		; Add status bar
 		Gui, Add, StatusBar
-		SB_SetParts(70, 70, 70)
+		SB_SetParts(70, 70, 70, 70)
 		this.UpdateStatusBar()
 		
 		Gui, Show, w640 h480, % this.Title
@@ -132,6 +132,7 @@ class CodeQuickTester
 				return
 		}
 		this.RichCode.Value := Code
+		this.RichCode.Modified := False
 		this.UpdateStatusBar()
 	}
 	
@@ -163,11 +164,13 @@ class CodeQuickTester
 		SB_SetText("Line " Row, 2)
 		SB_SetText("Col " Col, 3)
 		
+		SB_SetText(this.RichCode.Modified ? "Modified" : "Clean", 4)
+		
 		Selection := this.RichCode.Selection
 		; If the user has selected 1 char further than the end of the document,
 		; which is allowed in a RichEdit control, subtract 1 from the length
 		Len := Selection[2] - Selection[1] - (Selection[2] > Len)
-		SB_SetText(Len > 0 ? "Selection Length: " Len : "", 4) ; >0 because sometimes it comes up as -1 if you hold down paste
+		SB_SetText(Len > 0 ? "Selection Length: " Len : "", 5) ; >0 because sometimes it comes up as -1 if you hold down paste
 	}
 	
 	RegisterCloseCallback(CloseCallback)
@@ -189,10 +192,10 @@ class CodeQuickTester
 	
 	GuiClose()
 	{
-		if Trim(this.RichCode.Value, " `t`r`n") ; TODO: Check against last saved code
+		if this.RichCode.Modified
 		{
 			Gui, +OwnDialogs
-			MsgBox, 308, % this.Title " - Confirm Exit", Are you sure you want to exit?
+			MsgBox, 308, % this.Title " - Confirm Exit", There are unsaved changes. Are you sure you want to exit?
 			IfMsgBox, No
 				return true
 		}

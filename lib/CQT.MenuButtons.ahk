@@ -13,6 +13,9 @@ class MenuButtons
 			return
 		
 		FileOpen(FilePath, "w").Write(this.Parent.RichCode.Value)
+		
+		this.Parent.RichCode.Modified := False
+		this.Parent.UpdateStatusBar()
 	}
 	
 	Open()
