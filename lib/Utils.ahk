@@ -96,3 +96,20 @@ UriEncode(Uri, RE="[0-9A-Za-z]") {
 		Res .= (Chr:=Chr(Code)) ~= RE ? Chr : Format("%{:02X}", Code)
 	Return, Res
 }
+
+CreateMenus(Menu)
+{
+	static MenuName := 0
+	Menus := ["Menu_" MenuName++]
+	for each, Item in Menu
+	{
+		Ref := Item[2]
+		if IsObject(Ref) && Ref._NewEnum()
+		{
+			SubMenus := CreateMenus(Ref)
+			Menus.Push(SubMenus*), Ref := ":" SubMenus[1]
+		}
+		Menu, % Menus[1], Add, % Item[1], %Ref%
+	}
+	return Menus
+}

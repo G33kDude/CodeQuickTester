@@ -52,7 +52,7 @@ class CodeQuickTester
 		Gui, New, +Resize +hWndhMainWindow -AlwaysOnTop
 		this.AlwaysOnTop := False
 		this.hMainWindow := hMainWindow
-		this.Menus := this.CreateMenuBar(Menus)
+		this.Menus := CreateMenus(Menus)
 		Gui, Menu, % this.Menus[1]
 		Gui, Margin, 5, 5
 		
@@ -142,23 +142,6 @@ class CodeQuickTester
 				GuiControl,, % this.hCodeEditor, %Value%
 			return Value
 		}
-	}
-	
-	CreateMenuBar(Menu)
-	{
-		static MenuName := 0
-		Menus := ["CQT_" MenuName++]
-		for each, Item in Menu
-		{
-			Ref := Item[2]
-			if IsObject(Ref) && Ref._NewEnum()
-			{
-				SubMenus := this.CreateMenuBar(Ref)
-				Menus.Push(SubMenus*), Ref := ":" SubMenus[1]
-			}
-			Menu, % Menus[1], Add, % Item[1], %Ref%
-		}
-		return Menus
 	}
 	
 	RunButton()
