@@ -59,9 +59,12 @@ class MenuButtons
 			this.PasteInstance := new this.Parent.Paste(this.Parent)
 	}
 	
-	Params()
+	ScriptOpts()
 	{
-		; TODO
+		if WinExist("ahk_id" this.Parent.ScriptOptsInstance.hWnd)
+			WinActivate, % "ahk_id" this.Parent.ScriptOptsInstance.hWnd
+		else
+			this.Parent.ScriptOptsInstance := new this.Parent.ScriptOpts(this.Parent)
 	}
 	
 	ToggleOnTop()

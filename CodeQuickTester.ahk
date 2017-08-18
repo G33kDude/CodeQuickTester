@@ -17,6 +17,10 @@ FileEncoding, UTF-8
 Settings :=
 ( LTrim Join Comments
 {
+	; Script options
+	"AhkPath": A_AhkPath,
+	"Params": "",
+	
 	; Editor (colors are 0xBBGGRR)
 	"FGColor": 0xEDEDCD,
 	"BGColor": 0x3F3F3F,

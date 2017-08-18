@@ -34,13 +34,13 @@ class CodeQuickTester
 				["Comment Lines`tCtrl+k", Buttons.Comment.Bind(Buttons)],
 				["Uncomment Lines`tCtrl+Shift+k", Buttons.Uncomment.Bind(Buttons)],
 				["Indent Lines", this.Bound.Indent],
-				["Unindent Lines", this.Bound.Unindent]
+				["Unindent Lines", this.Bound.Unindent],
+				["Script &Options", Buttons.ScriptOpts.Bind(Buttons)]
 			]], ["&Tools", [
 				["&Pastebin`tCtrl+P", Buttons.Paste.Bind(Buttons)],
 				["Re&indent`tCtrl+I", Buttons.AutoIndent.Bind(Buttons)],
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
-				; ["Parameters", Buttons.Params.Bind(Buttons)],
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
@@ -102,10 +102,10 @@ class CodeQuickTester
 			this.Exec.Terminate() ; CheckIfRunning updates the GUI
 		else ; Not running or doesn't exist
 		{
-			; GuiControlGet, Params, Params:
+			this.Exec := ExecScript(this.RichCode.Value
+			, this.Settings.Params
+			, this.Settings.AhkPath)
 			
-			Code := this.RichCode.Value ; A temp var to avoid duplication of GuiControlGet
-			this.Exec := ExecScript(Code, "", DeHashBang(Code)) ; TODO: Implement Params
 			GuiControl,, % this.hRunButton, &Kill
 			
 			SetTimer(this.Bound.CheckIfRunning, 100)
@@ -229,5 +229,6 @@ class CodeQuickTester
 	}
 	
 	#Include CQT.Paste.ahk
+	#Include CQT.ScriptOpts.ahk
 	#Include CQT.MenuButtons.ahk
 }
