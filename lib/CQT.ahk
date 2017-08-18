@@ -61,22 +61,21 @@ class CodeQuickTester
 			Menu, % this.Menus[4], Check, &Highlighter
 		
 		; Add code editor
-		Gui, Font
-		, % "s" this.Settings.CodeFont.Size
-		. " w" (this.Settings.CodeFont.Bold ? "Bold" : "Norm")
-		, % this.Settings.CodeFont.Typeface
-		this.InitRichEdit()
-		Gui, Font
-		, % "s" this.Settings.Font.Size
-		. " w" (this.Settings.Font.Bold ? "Bold" : "Norm")
-		, % this.Settings.Font.Typeface
+		this.RichCode := new RichCode(this.Settings)
 		
-		; Get starting tester contents
-		FilePath := B_Params[1] ? RegExReplace(B_Params[1], "^ahk:") : this.DefaultPath
-		try
-			this.Code := FileExist(FilePath) ? FileOpen(FilePath, "r").Read() : UrlDownloadToVar(FilePath)
+		if B_Params.HasKey(1)
+			FilePath := RegExReplace(B_Params[1], "^ahk:") ; Remove leading service handler
+		else
+			FilePath := this.DefaultPath
+		
+		if (FilePath ~= "^https?://")
+			this.RichCode.Value := UrlDownloadToVar(FilePath)
+		else
+			this.RichCode.Value := FileOpen(FilePath, "r").Read()
+		
+		; Place cursor after the default template text
 		if (FilePath == this.DefaultPath)
-			SendMessage, 0x0B1, -1, -1,, % "ahk_id" this.hCodeEditor ; EM_SETSEL bottom of document
+			this.RichCode.Selection := [-1, -1]
 		
 		; Add run button
 		Gui, Add, Button, hWndhRunButton, &Run
@@ -97,53 +96,6 @@ class CodeQuickTester
 		Gui, Show, w640 h480, % this.Title
 	}
 	
-	InitRichEdit()
-	{
-		Settings := this.Settings
-		Gui, Add, Custom, ClassRichEdit50W hWndhCodeEditor +0x5031b1c4 +E0x20000
-		this.hCodeEditor := hCodeEditor
-		
-		; Register for WM_COMMAND and WM_NOTIFY events
-		; NOTE: this prevents garbage collection of
-		; the class until the control is destroyed
-		SendMessage, 0x445, 0, 1,, ahk_id %hCodeEditor% ; EM_SETEVENTMASK ENM_CHANGE
-		CtrlEvent := this.CtrlEvent.Bind(this)
-		GuiControl, +g, %hCodeEditor%, %CtrlEvent%
-		
-		; Set background color
-		SendMessage, 0x443, 0, Settings.BGColor,, ahk_id %hCodeEditor% ; EM_SETBKGNDCOLOR
-		
-		; Set FG color
-		VarSetCapacity(CharFormat, 116, 0)
-		NumPut(116, CharFormat, 0, "UInt") ; cbSize := sizeOf(CHARFORMAT2)
-		NumPut(0x40000000, CharFormat, 4, "UInt") ; dwMask := CFM_COLOR
-		NumPut(Settings.FGColor, CharFormat, 20, "UInt") ; crTextColor := 0xBBGGRR
-		SendMessage, 0x444, 0, &CharFormat,, ahk_id %hCodeEditor% ; EM_SETCHARFORMAT
-		
-		; Set tab size to 4 for non-highlighted code
-		VarSetCapacity(TabStops, 4, 0), NumPut(Settings.TabSize*4, TabStops, "UInt")
-		SendMessage, 0x0CB, 1, &TabStops,, ahk_id %hCodeEditor% ; EM_SETTABSTOPS
-		
-		; Change text limit from 32,767 to max
-		SendMessage, 0x435, 0, -1,, ahk_id %hCodeEditor% ; EM_EXLIMITTEXT
-	}
-	
-	Code[]
-	{
-		get {
-			GuiControlGet, CodeEditor,, % this.hCodeEditor
-			return CodeEditor
-		}
-		
-		set {
-			if this.Settings.UseHighlighter
-				this.Highlight(Value)
-			else
-				GuiControl,, % this.hCodeEditor, %Value%
-			return Value
-		}
-	}
-	
 	RunButton()
 	{
 		if (this.Exec.Status == 0) ; Running
@@ -152,7 +104,7 @@ class CodeQuickTester
 		{
 			; GuiControlGet, Params, Params:
 			
-			Code := this.Code ; A temp var to avoid duplication of GuiControlGet
+			Code := this.RichCode.Value ; A temp var to avoid duplication of GuiControlGet
 			this.Exec := ExecScript(Code, "", DeHashBang(Code)) ; TODO: Implement Params
 			GuiControl,, % this.hRunButton, &Kill
 			
@@ -171,7 +123,7 @@ class CodeQuickTester
 	
 	LoadCode(Code)
 	{
-		CodeEditor := this.Code
+		CodeEditor := this.RichCode.Value
 		if (CodeEditor && CodeEditor != Code) ; TODO: Do I need to Trim() here?
 		{
 			Gui, +OwnDialogs
@@ -179,49 +131,16 @@ class CodeQuickTester
 			IfMsgBox, No
 				return
 		}
-		this.Code := Code
+		this.RichCode.Value := Code
 		this.UpdateStatusBar()
 	}
 	
 	OnMessage(wParam, lParam, Msg, hWnd)
 	{
-		if (hWnd == this.hCodeEditor)
+		if (hWnd == this.RichCode.hWnd)
 		{
-			if (Msg == 0x100) ; WM_KEYDOWN
-			{
-				if (wParam == GetKeyVK("Tab"))
-				{
-					ControlGet, Selected, Selected,,, % "ahk_id" this.hCodeEditor
-					if (Selected == "" && !GetKeyState("Shift"))
-						SendMessage, 0xC2, 1, &(x:="`t"),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
-					else if GetKeyState("Shift")
-						this.Bound.Unindent()
-					else
-						this.Bound.Indent()
-					this.UpdateStatusBar()
-					return False
-				}
-				else if (wParam == GetKeyVK("Escape"))
-					return False
-				else if (wParam == GetKeyVK("v") && GetKeyState("Ctrl"))
-				{
-					SendMessage, 0xC2, 1, &(x:=Clipboard),, % "ahk_id" this.hCodeEditor ; EM_REPLACESEL
-					this.UpdateStatusBar()
-					return False
-				}
-			}
-			
 			; Call UpdateStatusBar after the edit handles the keystroke
 			SetTimer(this.Bound.UpdateStatusBar, -0)
-		}
-	}
-	
-	CtrlEvent(CtrlHwnd, GuiEvent, EventInfo, _ErrorLevel:="")
-	{
-		if (GuiEvent == "Normal" && EventInfo == 0x300) ; EN_CHANGE
-		{
-			; Delay until the user is finished changing the document
-			SetTimer(this.Bound.Highlight, -Abs(this.Settings.HighlightDelay))
 		}
 	}
 	
@@ -230,7 +149,7 @@ class CodeQuickTester
 		; Delete the timer if it was called by one
 		SetTimer(this.Bound.UpdateStatusBar, "Delete")
 		
-		hCodeEditor := this.hCodeEditor
+		hCodeEditor := this.RichCode.hWnd
 		hMainWindow := this.hMainWindow
 		Gui, %hMainWindow%:Default
 		
@@ -244,86 +163,11 @@ class CodeQuickTester
 		SB_SetText("Line " Row, 2)
 		SB_SetText("Col " Col, 3)
 		
-		VarSetCapacity(s, 8, 0)
-		SendMessage, 0x0B0, &s+0, &s+4,, ahk_id %hCodeEditor% ; EM_GETSEL
-		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
-		Len := Right - Left - (Right > Len) ; > is a workaround for being able to select the end of the document with RE
+		Selection := this.RichCode.Selection
+		; If the user has selected 1 char further than the end of the document,
+		; which is allowed in a RichEdit control, subtract 1 from the length
+		Len := Selection[2] - Selection[1] - (Selection[2] > Len)
 		SB_SetText(Len > 0 ? "Selection Length: " Len : "", 4) ; >0 because sometimes it comes up as -1 if you hold down paste
-	}
-	
-	Highlight(NewCode:="")
-	{
-		if !this.Settings.UseHighlighter
-			return
-		
-		hCodeEditor := this.hCodeEditor
-		
-		; Buffer any input events while the highlighter is running
-		Crit := A_IsCritical
-		Critical, 1000
-		
-		; Run the highlighter
-		Text := Highlight(NewCode == "" ? this.Code : NewCode, this.Settings)
-		
-		; "TRichEdit suspend/resume undo function"
-		; https://stackoverflow.com/a/21206620
-		
-		; Get the ITextDocument object
-		EM_GETOLEINTERFACE:=(0x400 + 60)
-		VarSetCapacity(pIRichEditOle, A_PtrSize, 0)
-		SendMessage, EM_GETOLEINTERFACE, 0, &pIRichEditOle,, ahk_id %hCodeEditor%
-		pIRichEditOle := NumGet(pIRichEditOle, 0, "UPtr")
-		IID_ITextDocument := "{8CC497C0-A1DF-11CE-8098-00AA0047BE5D}"
-		IRichEditOle := ComObject(9, pIRichEditOle, 1), ObjAddRef(pIRichEditOle)
-		pITextDocument := ComObjQuery(IRichEditOle, IID_ITextDocument)
-		ITextDocument := ComObject(9, pITextDocument, 1), ObjAddRef(pITextDocument)
-		
-		; Ignore changes, freeze the renderer, and suspend the undo buffer
-		SendMessage, 0x445, 0, 0,, ahk_id %hCodeEditor% ; EM_SETEVENTMASK ENM_NONE
-		try
-		{
-			; Not implemented in WINE
-			ITextDocument.Freeze()
-			ITextDocument.Undo(-9999995) ; tomSuspend
-		}
-		catch
-			GuiControl, -Redraw, %hCodeEditor%
-		
-		; Save the text to a UTF-8 buffer
-		VarSetCapacity(Buf, StrPut(Text, "UTF-8"), 0)
-		StrPut(Text, &Buf, "UTF-8")
-		
-		; Set up the necessary structs
-		VarSetCapacity(POINT    , 8, 0) ; Scroll position
-		VarSetCapacity(CHARRANGE, 8, 0) ; Selection
-		VarSetCapacity(SETTEXTEX, 8, 0) ; SetText Settings
-		NumPut(1, SETTEXTEX, 0, "UInt") ; flags = ST_KEEPUNDO
-		
-		; Save the scroll and cursor positions, update the text,
-		; then restore the scroll and cursor positions
-		SendMessage, 0x4DD, 0, &POINT,, ahk_id %hCodeEditor% ; EM_GETSCROLLPOS
-		SendMessage, 0x434, 0, &CHARRANGE,, ahk_id %hCodeEditor% ; EM_EXGETSEL
-		SendMessage, 0x461, &SETTEXTEX, &Buf,, ahk_id %hCodeEditor% ; EM_SETTEXTEX
-		SendMessage, 0x437, 0, &CHARRANGE,, ahk_id %hCodeEditor% ; EM_EXSETSEL
-		SendMessage, 0x4DE, 0, &POINt,, ahk_id %hCodeEditor% ; EM_SETSCROLLPOS
-		
-		; Resume the undo buffer, unfreeze the renderer, and listen for changes
-		try
-		{
-			; Not implemented in WINE
-			ITextDocument.Undo(-9999994) ; tomResume
-			ITextDocument.Unfreeze()
-		}
-		catch
-			GuiControl, +Redraw, %hCodeEditor%
-		SendMessage, 0x445, 0, 1,, ahk_id %hCodeEditor% ; EM_SETEVENTMASK ENM_CHANGE
-		
-		; Release the ITextDocument object
-		ITextDocument := "", IRichEditOle := ""
-		ObjRelease(pIRichEditOle), ObjRelease(pITextDocument)
-		
-		; Resume event processing
-		Critical, %Crit%
 	}
 	
 	RegisterCloseCallback(CloseCallback)
@@ -333,7 +177,7 @@ class CodeQuickTester
 	
 	GuiSize()
 	{
-		GuiControl, Move, % this.hCodeEditor, % "x" 5 "y" 5 "w" A_GuiWidth-10 "h" A_GuiHeight-60
+		GuiControl, Move, % this.RichCode.hWnd, % "x" 5 "y" 5 "w" A_GuiWidth-10 "h" A_GuiHeight-60
 		GuiControl, Move, % this.hRunButton, % "x" 5 "y" A_GuiHeight-50 "w" A_GuiWidth-10 "h" 22
 	}
 	
@@ -345,7 +189,7 @@ class CodeQuickTester
 	
 	GuiClose()
 	{
-		if Trim(this.Code, " `t`r`n") ; TODO: Check against last saved code
+		if Trim(this.RichCode.Value, " `t`r`n") ; TODO: Check against last saved code
 		{
 			Gui, +OwnDialogs
 			MsgBox, 308, % this.Title " - Confirm Exit", Are you sure you want to exit?

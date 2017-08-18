@@ -17,17 +17,11 @@ FileEncoding, UTF-8
 Settings :=
 ( LTrim Join Comments
 {
-	"Font": {
-		"Typeface": "Microsoft Sans Serif",
-		"Size": 8,
-		"Bold": False
-	},
-	
 	; Editor (colors are 0xBBGGRR)
-	"FGColor": 0xCDEDED,
+	"FGColor": 0xEDEDCD,
 	"BGColor": 0x3F3F3F,
 	"TabSize": 4,
-	"CodeFont": {
+	"Font": {
 		"Typeface": "Consolas",
 		"Size": 11,
 		"Bold": False
@@ -35,21 +29,22 @@ Settings :=
 	
 	; Highlighter (colors are 0xRRGGBB)
 	"UseHighlighter": True,
+	"Highlighter": "HighlightAHK",
 	"HighlightDelay": 200, ; Delay until the user is finished typing
 	"Colors": [
-		0x7F9F7F, ; Comments
-		0x7F9F7F, ; Multiline comments
-		0x7CC8CF, ; Directives
-		0x97C0EB, ; Punctuation
-		0xF79B57, ; Numbers
-		0xCC9893, ; Strings
-		0xF79B57, ; A_Builtins
-		0xE4EDED, ; Flow
-		0xCDBFA3, ; Commands
-		0x7CC8CF, ; Functions
-		0xCB8DD9, ; Keynames
-		0xE4EDED, ; Other keywords
-		0xEDEDCD  ; Text
+		; RRGGBB  ;    ; AHK
+		0x7F9F7F, ;  1 ; Comments
+		0x7F9F7F, ;  2 ; Multiline comments
+		0x7CC8CF, ;  3 ; Directives
+		0x97C0EB, ;  4 ; Punctuation
+		0xF79B57, ;  5 ; Numbers
+		0xCC9893, ;  6 ; Strings
+		0xF79B57, ;  7 ; A_Builtins
+		0xE4EDED, ;  8 ; Flow
+		0xCDBFA3, ;  9 ; Commands
+		0x7CC8CF, ; 10 ; Functions
+		0xCB8DD9, ; 11 ; Key names
+		0xE4EDED  ; 12 ; Other keywords
 	],
 	
 	; Auto-Indenter
@@ -90,6 +85,8 @@ TesterClose(Tester)
 	return
 */
 
+#Include %A_ScriptDir%\RichCode.ahk\RichCode.ahk
+#Include %A_ScriptDir%\RichCode.ahk\Highlighters\AHK.ahk
 #Include %A_ScriptDir%\lib
 #Include CQT.ahk
 #Include ServiceHandler.ahk
@@ -97,4 +94,3 @@ TesterClose(Tester)
 #Include AutoIndent.ahk
 #Include Utils.ahk
 #Include Publish.ahk
-#Include Highlight.ahk

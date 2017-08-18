@@ -8,7 +8,6 @@ class Paste
 		Gui, New, +Owner%ParentWnd% +ToolWindow +hWndhWnd
 		this.hWnd := hWnd
 		Gui, Margin, 5, 5
-		Gui, Font, % this.Parent.Settings.Font, % this.Parent.Settings.TypeFace
 		
 		Gui, Add, Text, xm ym w30 h22 +0x200, Desc: ; 0x200 for vcenter
 		Gui, Add, Edit, x+5 yp w125 h22 hWndhPasteDesc, % this.Parent.Settings.DefaultDesc
@@ -51,7 +50,7 @@ class Paste
 		GuiControlGet, PasteChan,, % this.hPasteChan
 		this.GuiClose()
 		
-		Link := Ahkbin(this.Parent.Code, PasteName, PasteDesc, PasteChan)
+		Link := Ahkbin(this.Parent.RichCode.Value, PasteName, PasteDesc, PasteChan)
 		
 		MsgBox, 292, % this.Parent.Title " - Pasted", Link received:`n%Link%`n`nCopy to clipboard?
 		IfMsgBox, Yes

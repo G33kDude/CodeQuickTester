@@ -12,7 +12,7 @@ class MenuButtons
 		if ErrorLevel
 			return
 		
-		FileOpen(FilePath, "w").Write(this.Parent.Code)
+		FileOpen(FilePath, "w").Write(this.Parent.RichCode.Value)
 	}
 	
 	Open()
@@ -35,7 +35,7 @@ class MenuButtons
 		if ErrorLevel
 			return
 		
-		FileOpen(FilePath, "w").Write(this.Parent.Code)
+		FileOpen(FilePath, "w").Write(this.Parent.RichCode.Value)
 		PreprocessScript(Text, FilePath, [])
 		FileOpen(FilePath, "w").Write(Text)
 	}
@@ -81,12 +81,14 @@ class MenuButtons
 			Menu, % this.Parent.Menus[4], Check, &Highlighter
 		else
 			Menu, % this.Parent.Menus[4], Uncheck, &Highlighter
-		this.Parent.Code := this.Parent.Code
+		
+		; Force refresh the code, adding/removing any highlighting
+		this.Parent.RichCode.Value := this.Parent.RichCode.Value
 	}
 	
 	AutoIndent()
 	{
-		this.Parent.LoadCode(AutoIndent(this.Parent.Code, this.Parent.Settings.Indent))
+		this.Parent.LoadCode(AutoIndent(this.Parent.RichCode.Value, this.Parent.Settings.Indent))
 	}
 	
 	Help()
@@ -121,107 +123,21 @@ class MenuButtons
 	
 	Comment()
 	{
-		hCodeEditor := this.Parent.hCodeEditor
-		
-		Text := StrSplit(this.Parent.Code, "`n", "`r")
-		
-		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
-		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
-		
-		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
-		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
-		
-		Count := Bottom-Top + 1
-		Loop, % Count
-			Text[A_Index+Top] := ";" Text[A_Index+Top]
-		for each, Line in Text
-			Out .= "`r`n" Line
-		Out := SubStr(Out, 3)
-		
-		this.Parent.Code := Out
-		
-		NumPut(NumGet(s, "UInt") + 1, &s, "UInt")
-		NumPut(NumGet(s, 4, "UInt") + Count, &s, 4, "UInt")
-		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+		this.Parent.RichCode.IndentSelection(False, ";")
 	}
 	
 	Uncomment()
 	{
-		hCodeEditor := this.Parent.hCodeEditor
-		
-		Text := StrSplit(this.Parent.Code, "`n", "`r")
-		
-		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
-		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
-		
-		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
-		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
-		
-		Removed := 0
-		Loop, % Bottom-Top + 1
-			if InStr(Text[A_Index+Top], ";") == 1
-				Text[A_Index+Top] := SubStr(Text[A_Index+Top], 2), Removed++
-		for each, Line in Text
-			Out .= "`r`n" Line
-		Out := SubStr(Out, 3)
-		
-		this.Parent.Code := Out
-		
-		NumPut(NumGet(s, "UInt") - 1, &s, "UInt")
-		NumPut(NumGet(s, 4, "UInt") - Removed, &s, 4, "UInt")
-		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+		this.Parent.RichCode.IndentSelection(True, ";")
 	}
 	
 	Indent()
 	{
-		hCodeEditor := this.Parent.hCodeEditor
-		
-		Text := StrSplit(this.Parent.Code, "`n", "`r")
-		
-		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
-		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
-		
-		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
-		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
-		
-		Count := Bottom-Top + 1
-		Loop, % Count
-			Text[A_Index+Top] := "`t" Text[A_Index+Top]
-		for each, Line in Text
-			Out .= "`r`n" Line
-		Out := SubStr(Out, 3)
-		
-		this.Parent.Code := Out
-		
-		NumPut(NumGet(s, "UInt") + 1, &s, "UInt")
-		NumPut(NumGet(s, 4, "UInt") + Count, &s, 4, "UInt")
-		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+		this.Parent.RichCode.IndentSelection()
 	}
 	
 	Unindent()
 	{
-		hCodeEditor := this.Parent.hCodeEditor
-		
-		Text := StrSplit(this.Parent.Code, "`n", "`r")
-		
-		VarSetCapacity(s, 8, 0), SendMessage(0x0B0, &s, &s+4, hCodeEditor) ; EM_GETSEL
-		Left := NumGet(s, 0, "UInt"), Right := NumGet(s, 4, "UInt")
-		
-		Top := SendMessage(0x436, 0, Left, hCodeEditor) ; EM_EXLINEFROMCHAR
-		Bottom := SendMessage(0x436, 0, Right, hCodeEditor) ; EM_EXLINEFROMCHAR
-		
-		Removed := 0
-		Loop, % Bottom-Top + 1
-			if InStr(Text[A_Index+Top], "`t") == 1
-				Text[A_Index+Top] := SubStr(Text[A_Index+Top], 2), Removed++
-		for each, Line in Text
-			Out .= "`r`n" Line
-		Out := SubStr(Out, 3)
-		
-		this.Parent.Code := Out
-		
-		NumPut(NumGet(s, "UInt") - 1, &s, "UInt")
-		NumPut(NumGet(s, 4, "UInt") - Removed, &s, 4, "UInt")
-		SendMessage(0x437, 0, &s, hCodeEditor) ; EM_EXSETSEL
+		this.Parent.RichCode.IndentSelection(True)
 	}
 }
