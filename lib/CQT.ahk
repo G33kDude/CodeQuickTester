@@ -60,6 +60,11 @@ class CodeQuickTester
 		if this.Settings.UseHighlighter
 			Menu, % this.Menus[4], Check, &Highlighter
 		
+		; Register for events
+		WinEvents.Register(this.hMainWindow, this)
+		for each, Msg in [0x100, 0x201, 0x202, 0x204] ; WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
+			OnMessage(Msg, this.Bound.OnMessage)
+		
 		; Add code editor
 		this.RichCode := new RichCode(this.Settings)
 		
@@ -87,11 +92,6 @@ class CodeQuickTester
 		Gui, Add, StatusBar
 		SB_SetParts(70, 70, 70)
 		this.UpdateStatusBar()
-		
-		; Register for events
-		WinEvents.Register(this.hMainWindow, this)
-		for each, Msg in [0x100, 0x201, 0x202, 0x204] ; WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
-			OnMessage(Msg, this.Bound.OnMessage)
 		
 		Gui, Show, w640 h480, % this.Title
 	}
