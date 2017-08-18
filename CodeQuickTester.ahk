@@ -13,6 +13,9 @@ FileEncoding, UTF-8
 Settings :=
 ( LTrim Join Comments
 {
+	; When True, this setting may conflict with other instances of CQT
+	"GlobalRun": False,
+	
 	; Script options
 	"AhkPath": A_AhkPath,
 	"Params": "",
@@ -61,7 +64,25 @@ Tester.RegisterCloseCallback(Func("TesterClose"))
 return
 
 #If Tester.Exec.Status == 0 ; Running
+
 ~*Escape::Tester.Exec.Terminate()
+
+#If (Tester.Settings.GlobalRun && Tester.Exec.Status == 0) ; Running
+
+F5::
+!r::
+; Reloads
+Tester.RunButton()
+Tester.RunButton()
+return
+
+#If Tester.Settings.GlobalRun
+
+F5::
+!r::
+Tester.RunButton()
+return
+
 #If
 
 TesterClose(Tester)

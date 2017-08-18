@@ -41,6 +41,7 @@ class CodeQuickTester
 				["Re&indent`tCtrl+I", Buttons.AutoIndent.Bind(Buttons)],
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
+				["Global Run Hotkeys", Buttons.GlobalRun.Bind(Buttons)],
 				["Install", Buttons.Install.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
@@ -59,6 +60,10 @@ class CodeQuickTester
 		; If set as default, check the highlighter option
 		if this.Settings.UseHighlighter
 			Menu, % this.Menus[4], Check, &Highlighter
+		
+		; If set as default, check the global run hotkeys option
+		if this.Settings.GlobalRun
+			Menu, % this.Menus[4], Check, Global Run Hotkeys
 		
 		; Register for events
 		WinEvents.Register(this.hMainWindow, this)

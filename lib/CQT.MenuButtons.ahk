@@ -92,6 +92,14 @@ class MenuButtons
 		this.Parent.RichCode.Value := this.Parent.RichCode.Value
 	}
 	
+	GlobalRun()
+	{
+		if (this.Parent.Settings.GlobalRun := !this.Parent.Settings.GlobalRun)
+			Menu, % this.Parent.Menus[4], Check, Global Run Hotkeys
+		else
+			Menu, % this.Parent.Menus[4], Uncheck, Global Run Hotkeys
+	}
+	
 	AutoIndent()
 	{
 		this.Parent.LoadCode(AutoIndent(this.Parent.RichCode.Value, this.Parent.Settings.Indent))
