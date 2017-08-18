@@ -28,7 +28,7 @@ class MenuButtons
 	
 	New()
 	{
-		Run, %A_AhkPath% %A_ScriptFullPath%
+		Run, "%A_AhkPath%" "%A_ScriptFullPath%"
 	}
 	
 	Publish()
