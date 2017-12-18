@@ -73,7 +73,7 @@ SendMessage(Msg, wParam, lParam, hWnd)
 
 Ahkbin(Content, Name="", Desc="", Channel="")
 {
-	static URL := "http://p.ahkscript.org/"
+	static URL := "https://p.ahkscript.org/"
 	Form := "code=" UriEncode(Content)
 	if Name
 		Form .= "&name=" UriEncode(Name)
