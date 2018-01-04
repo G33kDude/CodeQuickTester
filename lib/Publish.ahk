@@ -10,12 +10,12 @@ PreprocessScript(ByRef ScriptText, AhkScript, KeepComments=1, KeepIndent=1, Keep
 	{
 		FileList := [AhkScript]
 		; ScriptText := "; <COMPILER: v" A_AhkVersion ">`n"
-		FirstScriptDir := ScriptDir
+		FirstScriptDir := A_WorkingDir
 		IsFirstScript := true
 		Options := { comm: ";", esc: "``" }
 		
 		OldWorkingDir := A_WorkingDir
-		SetWorkingDir, %ScriptDir%
+		SetWorkingDir, %FirstScriptDir%
 	}
 	
 	IfNotExist, %AhkScript%
