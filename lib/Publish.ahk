@@ -18,7 +18,6 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 		SetWorkingDir, %ScriptDir%
 	}
 	
-	; TODO: Add braces
 	IfNotExist, %AhkScript%
 		if !iOption
 			Util_Error((IsFirstScript ? "Script" : "#include") " file """ AhkScript """ cannot be opened.")
@@ -34,7 +33,7 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 			{
 				if StrStartsWith(tline, Options.comm)
 					continue
-				else if (tline == "")
+				else if tline =
 					continue
 				else if StrStartsWith(tline, "/*")
 				{
@@ -42,7 +41,6 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 					continue
 				}
 			}
-			
 			if StrStartsWith(tline, "(") && !IsFakeCSOpening(tline)
 				contSection := true
 			else if StrStartsWith(tline, ")")
@@ -58,46 +56,69 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 					IgnoreErrors := true, IncludeFile := Trim(o1)
 				
 				if RegExMatch(IncludeFile, "^<(.+)>$", o)
-					&& (IncFile2 := FindLibraryFile(o1, FirstScriptDir))
 				{
-					IncludeFile := IncFile2
-				}
-				else
-				{
-					StringReplace, IncludeFile, IncludeFile, `%A_ScriptDir`%, %FirstScriptDir%, All
-					StringReplace, IncludeFile, IncludeFile, `%A_AppData`%, %A_AppData%, All
-					StringReplace, IncludeFile, IncludeFile, `%A_AppDataCommon`%, %A_AppDataCommon%, All
-					StringReplace, IncludeFile, IncludeFile, `%A_LineFile`%, %AhkScript%, All
-					
-					if InStr(FileExist(IncludeFile), "D")
+					if IncFile2 := FindLibraryFile(o1, FirstScriptDir)
 					{
-						SetWorkingDir, %IncludeFile%
-						continue ; Done processing this line, go to next line
+						IncludeFile := IncFile2
+						goto _skip_findfile
 					}
 				}
 				
+				StringReplace, IncludeFile, IncludeFile, `%A_ScriptDir`%, %FirstScriptDir%, All
+				StringReplace, IncludeFile, IncludeFile, `%A_AppData`%, %A_AppData%, All
+				StringReplace, IncludeFile, IncludeFile, `%A_AppDataCommon`%, %A_AppDataCommon%, All
+				StringReplace, IncludeFile, IncludeFile, `%A_LineFile`%, %AhkScript%, All
+				
+				if InStr(FileExist(IncludeFile), "D")
+				{
+					SetWorkingDir, %IncludeFile%
+					continue
+				}
+				
+				_skip_findfile:
+				
 				IncludeFile := Util_GetFullPath(IncludeFile)
 				
-				AlreadyIncluded := InArray(FileList, IncludeFile)
-				
+				AlreadyIncluded := false
+				for k,v in FileList
+					if (v = IncludeFile)
+					{
+						AlreadyIncluded := true
+						break
+					}
 				if(IsIncludeAgain || !AlreadyIncluded)
 				{
 					if !AlreadyIncluded
-						FileList.Push(IncludeFile)
+						FileList.Insert(IncludeFile)
 					PreprocessScript(ScriptText, IncludeFile, ExtraFiles, FileList, FirstScriptDir, Options, IgnoreErrors)
 				}
-			}
-			
-			else if !contSection && tline ~= "i)^FileInstall[, \t]"
+			}else if !contSection && tline ~= "i)^FileInstall[, \t]"
 			{
 				if tline ~= "^\w+\s+(:=|\+=|-=|\*=|/=|//=|\.=|\|=|&=|\^=|>>=|<<=)"
 					continue ; This is an assignment!
-				if !RegExMatch(tline, "i)^FileInstall[ \t]*[, \t][ \t]*([^,]+?)[ \t]*(,|$)", o) || o1 ~= "[^``]%" ; TODO: implement `, detection
+				
+				; workaround for `, detection
+				EscapeChar := Options.esc
+				EscapeCharChar := EscapeChar EscapeChar
+				EscapeComma := EscapeChar ","
+				EscapeTmp := chr(2)
+				EscapeTmpD := chr(3)
+				StringReplace, tline, tline, %EscapeCharChar%, %EscapeTmpD%, All
+				StringReplace, tline, tline, %EscapeComma%, %EscapeTmp%, All
+				
+				if !RegExMatch(tline, "i)^FileInstall[ \t]*[, \t][ \t]*([^,]+?)[ \t]*(,|$)", o) || o1 ~= "[^``]%"
 					Util_Error("Error: Invalid ""FileInstall"" syntax found. Note that the first parameter must not be specified using a continuation section.")
 				_ := Options.esc
 				StringReplace, o1, o1, %_%`%, `%, All
 				StringReplace, o1, o1, %_%`,, `,, All
 				StringReplace, o1, o1, %_%%_%,, %_%,, All
+				
+				; workaround for `, detection [END]
+				StringReplace, o1, o1, %EscapeTmp%, `,, All
+				StringReplace, o1, o1, %EscapeTmpD%, %EscapeChar%, All
+				StringReplace, tline, tline, %EscapeTmp%, %EscapeComma%, All
+				StringReplace, tline, tline, %EscapeTmpD%, %EscapeCharChar%, All
+				
 				ExtraFiles.Insert(o1)
 				ScriptText .= tline "`n"
 			}else if !contSection && RegExMatch(tline, "i)^#CommentFlag\s+(.+)$", o)
@@ -128,9 +149,12 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 			Util_Error("Error: The AutoHotkey build used for auto-inclusion of library functions is not recognized.", 1, AhkPath)
 		if AhkType = Legacy
 			Util_Error("Error: Legacy AutoHotkey versions (prior to v1.1) are not allowed as the build used for auto-inclusion of library functions.", 1, AhkPath)
-		RunWait, "%AhkPath%" /iLib "%ilibfile%" /ErrorStdOut "%AhkScript%", %FirstScriptDir%, UseErrorLevel
+		tmpErrorLog := Util_TempFile()
+		RunWait, "%AhkPath%" /iLib "%ilibfile%" /ErrorStdOut "%AhkScript%" 2>"%tmpErrorLog%", %FirstScriptDir%, UseErrorLevel
+		FileRead,tmpErrorData,%tmpErrorLog%
+		FileDelete,%tmpErrorLog%
 		if (ErrorLevel = 2)
-			Util_Error("Error: The script contains syntax errors.")
+			Util_Error("Error: The script contains syntax errors.",1,tmpErrorData)
 		IfExist, %ilibfile%
 		{
 			PreprocessScript(ScriptText, ilibfile, ExtraFiles, FileList, FirstScriptDir, Options)
@@ -141,14 +165,6 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 	
 	if OldWorkingDir
 		SetWorkingDir, %OldWorkingDir%
-}
-
-InArray(Array, Value)
-{
-	for k, v in Array
-		if (v = Value)
-			return true
-	return false
 }
 
 IsFakeCSOpening(tline)
@@ -189,6 +205,16 @@ StrStartsWith(ByRef v, ByRef w)
 RegExEscape(String)
 {
 	return "\Q" RegExReplace(String, "\\E", "\E\\E\Q") "\E"
+}
+
+Util_TempFile(d:="")
+{
+	if ( !StrLen(d) || !FileExist(d) )
+		d:=A_Temp
+	Loop
+		tempName := d "\~temp" A_TickCount ".tmp"
+	until !FileExist(tempName)
+	return tempName
 }
 
 Util_GetFullPath(path)
