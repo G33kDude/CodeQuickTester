@@ -91,6 +91,8 @@ class CodeQuickTester
 		
 		if (FilePath ~= "^https?://")
 			this.RichCode.Value := UrlDownloadToVar(FilePath)
+		else if (FilePath = "Clipboard")
+			this.RichCode.Value := Clipboard
 		else
 		{
 			this.RichCode.Value := FileOpen(FilePath, "r").Read()
