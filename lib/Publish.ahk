@@ -3,7 +3,7 @@
 ; Based on code from fincs' Ahk2Exe - https://github.com/fincs/ahk2exe
 ;
 
-PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScriptDir="", Options="", iOption=0)
+PreprocessScript(ByRef ScriptText, AhkScript, KeepComments=1, KeepIndent=1, KeepEmpties=0, FileList="", FirstScriptDir="", Options="", iOption=0)
 {
 	SplitPath, AhkScript, ScriptName, ScriptDir
 	if !IsObject(FileList)
@@ -27,16 +27,19 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 	Loop, Read, %AhkScript%
 	{
 		tline := Trim(A_LoopReadLine)
+		RegExMatch(A_LoopReadLine, "^[ \t]+", indent)
 		if !cmtBlock
 		{
 			if !contSection
 			{
 				if StrStartsWith(tline, Options.comm)
 					continue
-				else if tline =
+				else if (tline = "" && !KeepEmpties)
 					continue
 				else if StrStartsWith(tline, "/*")
 				{
+					if KeepComments
+						ScriptText .= A_LoopReadLine "`n"
 					cmtBlock := true
 					continue
 				}
@@ -46,8 +49,8 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 			else if StrStartsWith(tline, ")")
 				contSection := false
 			
-			tline := RegExReplace(tline, "\s+" RegExEscape(Options.comm) ".*$", "")
-			if !contSection && RegExMatch(tline, "i)^#Include(Again)?[ \t]*[, \t]?\s+(.*)$", o)
+			ttline := RegExReplace(tline, "\s+" RegExEscape(Options.comm) ".*$", "")
+			if !contSection && RegExMatch(ttline, "i)^#Include(Again)?[ \t]*[, \t]?\s+(.*)$", o)
 			{
 				IsIncludeAgain := (o1 = "Again")
 				IgnoreErrors := false
@@ -90,11 +93,11 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 				{
 					if !AlreadyIncluded
 						FileList.Insert(IncludeFile)
-					PreprocessScript(ScriptText, IncludeFile, ExtraFiles, FileList, FirstScriptDir, Options, IgnoreErrors)
+					PreprocessScript(ScriptText, IncludeFile, KeepComments, KeepIndent, KeepEmpties, FileList, FirstScriptDir, Options, IgnoreErrors)
 				}
-			}else if !contSection && tline ~= "i)^FileInstall[, \t]"
+			}else if !contSection && ttline ~= "i)^FileInstall[, \t]"
 			{
-				if tline ~= "^\w+\s+(:=|\+=|-=|\*=|/=|//=|\.=|\|=|&=|\^=|>>=|<<=)"
+				if ttline ~= "^\w+\s+(:=|\+=|-=|\*=|/=|//=|\.=|\|=|&=|\^=|>>=|<<=)"
 					continue ; This is an assignment!
 				
 				; workaround for `, detection
@@ -103,10 +106,10 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 				EscapeComma := EscapeChar ","
 				EscapeTmp := chr(2)
 				EscapeTmpD := chr(3)
-				StringReplace, tline, tline, %EscapeCharChar%, %EscapeTmpD%, All
-				StringReplace, tline, tline, %EscapeComma%, %EscapeTmp%, All
+				StringReplace, ttline, ttline, %EscapeCharChar%, %EscapeTmpD%, All
+				StringReplace, ttline, ttline, %EscapeComma%, %EscapeTmp%, All
 				
-				if !RegExMatch(tline, "i)^FileInstall[ \t]*[, \t][ \t]*([^,]+?)[ \t]*(,|$)", o) || o1 ~= "[^``]%"
+				if !RegExMatch(ttline, "i)^FileInstall[ \t]*[, \t][ \t]*([^,]+?)[ \t]*(,|$)", o) || o1 ~= "[^``]%"
 					Util_Error("Error: Invalid ""FileInstall"" syntax found. Note that the first parameter must not be specified using a continuation section.")
 				_ := Options.esc
 				StringReplace, o1, o1, %_%`%, `%, All
@@ -116,23 +119,26 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 				; workaround for `, detection [END]
 				StringReplace, o1, o1, %EscapeTmp%, `,, All
 				StringReplace, o1, o1, %EscapeTmpD%, %EscapeChar%, All
-				StringReplace, tline, tline, %EscapeTmp%, %EscapeComma%, All
-				StringReplace, tline, tline, %EscapeTmpD%, %EscapeCharChar%, All
+				StringReplace, ttline, ttline, %EscapeTmp%, %EscapeComma%, All
+				StringReplace, ttline, ttline, %EscapeTmpD%, %EscapeCharChar%, All
 				
-				ExtraFiles.Insert(o1)
-				ScriptText .= tline "`n"
+				ScriptText .= (KeepIndent ? indent : "") (KeepComments ? tline : ttline) "`n"
 			}else if !contSection && RegExMatch(tline, "i)^#CommentFlag\s+(.+)$", o)
-				Options.comm := o1, ScriptText .= tline "`n"
+				Options.comm := o1, ScriptText .= (KeepIndent ? indent : "") (KeepComments ? tline : ttline) "`n"
 			else if !contSection && RegExMatch(tline, "i)^#EscapeChar\s+(.+)$", o)
-				Options.esc := o1, ScriptText .= tline "`n"
+				Options.esc := o1, ScriptText .= (KeepIndent ? indent : "") (KeepComments ? tline : ttline) "`n"
 			else if !contSection && RegExMatch(tline, "i)^#DerefChar\s+(.+)$", o)
 				Util_Error("Error: #DerefChar is not supported.")
 			else if !contSection && RegExMatch(tline, "i)^#Delimiter\s+(.+)$", o)
 				Util_Error("Error: #Delimiter is not supported.")
 			else
-				ScriptText .= (contSection ? A_LoopReadLine : tline) "`n"
-		}else if StrStartsWith(tline, "*/")
-			cmtBlock := false
+				ScriptText .= (contSection ? A_LoopReadLine : (KeepIndent ? indent : "") (KeepComments ? tline : ttline)) "`n"
+		}else{
+			if KeepComments
+				ScriptText .= A_LoopReadLine "`n"
+			if StrStartsWith(tline, "*/")
+				cmtBlock := false
+		}
 	}
 	
 	Loop, % !!IsFirstScript ; equivalent to "if IsFirstScript" except you can break from the block
@@ -157,7 +163,7 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList="", FirstScri
 			Util_Error("Error: The script contains syntax errors.",1,tmpErrorData)
 		IfExist, %ilibfile%
 		{
-			PreprocessScript(ScriptText, ilibfile, ExtraFiles, FileList, FirstScriptDir, Options)
+			PreprocessScript(ScriptText, ilibfile, KeepComments, KeepIndent, KeepEmpties, FileList, FirstScriptDir, Options)
 			FileDelete, %ilibfile%
 		}
 		StringTrimRight, ScriptText, ScriptText, 1 ; remove trailing newline
