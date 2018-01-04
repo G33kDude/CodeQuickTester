@@ -2,6 +2,8 @@ class CodeQuickTester
 {
 	static Msftedit := DllCall("LoadLibrary", "Str", "Msftedit.dll")
 	DefaultPath := "C:\Windows\ShellNew\Template.ahk"
+	EditorString := """" A_AhkPath """ """ A_ScriptFullPath """ ""%1"""
+	OrigEditorString := "notepad.exe %1"
 	Title := "CodeQuickTester"
 	
 	__New(Settings)
@@ -42,7 +44,8 @@ class CodeQuickTester
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
 				["Global Run Hotkeys", Buttons.GlobalRun.Bind(Buttons)],
-				["Install Service Handler", Buttons.ServiceHandler.Bind(Buttons)]
+				["Install Service Handler", Buttons.ServiceHandler.Bind(Buttons)],
+				["Set as Default Editor", Buttons.DefaultEditor.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
 				["&About", Buttons.About.Bind(Buttons)]
@@ -68,6 +71,10 @@ class CodeQuickTester
 		; If service handler is installed, check the menu option
 		if ServiceHandler.Installed()
 			Menu, % this.Menus[4], Check, Install Service Handler
+		
+		RegRead, Editor, HKCR, AutoHotkeyScript\Shell\Edit\Command
+		if (Editor == this.EditorString)
+			Menu, % this.Menus[4], Check, Set as Default Editor
 		
 		; Register for events
 		WinEvents.Register(this.hMainWindow, this)

@@ -142,6 +142,44 @@ class MenuButtons
 		}
 	}
 	
+	DefaultEditor()
+	{
+		Gui, +OwnDialogs
+		
+		if !A_IsAdmin
+		{
+			MsgBox, 48, % this.Parent.Title " - Change Editor", You must be running as administrator to use this feature.
+			return
+		}
+		
+		RegRead, Editor, HKCR, AutoHotkeyScript\Shell\Edit\Command
+		if (Editor == this.Parent.EditorString)
+		{
+			MsgBox, 36, % this.Parent.Title " - Remove as Default Editor"
+			, % "Are you sure you want to restore the original default editor for .ahk files?"
+			. "`n`n" this.Parent.OrigEditorString
+			IfMsgBox, Yes
+			{
+				RegWrite REG_SZ, HKCR, AutoHotkeyScript\Shell\Edit\Command,, % this.Parent.OrigEditorString
+				Menu, % this.Parent.Menus[4], Uncheck, Set as Default Editor
+			}
+		}
+		else
+		{
+			MsgBox, 36, % this.Parent.Title " - Set as Default Editor"
+			, % "Are you sure you want to install CodeQuickTester as the default editor for .ahk files?"
+			. "`n`n" this.Parent.EditorString
+			IfMsgBox, Yes
+			{
+				RegWrite REG_SZ, HKCR, AutoHotkeyScript\Shell\Edit\Command,, % this.Parent.EditorString
+				MsgBox, %ErrorLevel%
+				Menu, % this.Parent.Menus[4], Check, Set as Default Editor
+			}
+		}
+		
+		
+	}
+	
 	Comment()
 	{
 		this.Parent.RichCode.IndentSelection(False, ";")
