@@ -81,11 +81,20 @@ class CodeQuickTester
 		if (FilePath ~= "^https?://")
 			this.RichCode.Value := UrlDownloadToVar(FilePath)
 		else
+		{
 			this.RichCode.Value := FileOpen(FilePath, "r").Read()
-		
-		; Place cursor after the default template text
-		if (FilePath == this.DefaultPath)
-			this.RichCode.Selection := [-1, -1]
+			
+			if (FilePath == this.DefaultPath)
+			{
+				; Place cursor after the default template text
+				this.RichCode.Selection := [-1, -1]
+			}
+			else
+			{
+				; Follow the directory of the most recently opened file
+				SetWorkingDir, %FilePath%\..
+			}
+		}
 		
 		; Add run button
 		Gui, Add, Button, hWndhRunButton, &Run

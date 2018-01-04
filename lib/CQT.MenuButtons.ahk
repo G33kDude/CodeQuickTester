@@ -22,8 +22,13 @@ class MenuButtons
 	{
 		Gui, +OwnDialogs
 		FileSelectFile, FilePath, 3,, % this.Parent.Title " - Open Code"
-		if !ErrorLevel
-			this.Parent.LoadCode(FileOpen(FilePath, "r").Read())
+		if ErrorLevel
+			return
+		this.Parent.LoadCode(FileOpen(FilePath, "r").Read())
+		
+		; Follow the directory of the most recently opened file
+		SetWorkingDir, %FilePath%\..
+		this.Parent.ScriptOpts.UpdateFields()
 	}
 	
 	New()
