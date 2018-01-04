@@ -20,11 +20,20 @@ class ScriptOpts
 		this.hAhkPath := hAhkPath
 		
 		; Add parameters field
-		Gui, Add, Text, xm w95, Parameters:
+		Gui, Add, Text, xm w95 h22 +0x200, Parameters:
 		Gui, Add, Edit, yp x+m w250 hWndhParamEdit
 		this.hParamEdit := hParamEdit
 		ParamEditBound := this.ParamEdit.Bind(this)
 		GuiControl, +g, %hParamEdit%, %ParamEditBound%
+		
+		; Add Working Directory field
+		Gui, Add, Button, xm w95 hWndhWDButton, Pick Working Dir
+		BoundSelectPath := this.SelectPath.Bind(this)
+		GuiControl, +g, %hWDButton%, %BoundSelectPath%
+		
+		; Add Working Dir visualization field
+		Gui, Add, Edit, x+m w250 ReadOnly hWndhWorkingDir, %A_WorkingDir%
+		this.hWorkingDir := hWorkingDir
 		
 		; Show the GUI
 		Gui, Show,, % this.Parent.Title " - Script Options"
@@ -44,6 +53,21 @@ class ScriptOpts
 			return
 		this.Parent.Settings.AhkPath := AhkPath
 		GuiControl,, % this.hAhkPath, %AhkPath%
+	}
+	
+	SelectPath()
+	{
+		GuiControlGet, WorkingDir,, % this.hWorkingDir
+		FileSelectFolder, WorkingDir,, 0, Choose the Working Directory
+		if !WorkingDir
+			return
+		SetWorkingDir, %WorkingDir%
+		this.UpdateFields()
+	}
+	
+	UpdateFields()
+	{
+		GuiControl,, % this.hWorkingDir, %A_WorkingDir%
 	}
 	
 	GuiClose()
