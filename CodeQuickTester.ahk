@@ -34,21 +34,20 @@ Settings :=
 	"UseHighlighter": True,
 	"Highlighter": "HighlightAHK",
 	"HighlightDelay": 200, ; Delay until the user is finished typing
-	"Colors": [
-		; RRGGBB  ;    ; AHK
-		0x7F9F7F, ;  1 ; Comments
-		0x7F9F7F, ;  2 ; Multiline comments
-		0x7CC8CF, ;  3 ; Directives
-		0x97C0EB, ;  4 ; Punctuation
-		0xF79B57, ;  5 ; Numbers
-		0xCC9893, ;  6 ; Strings
-		0xF79B57, ;  7 ; A_Builtins
-		0xE4EDED, ;  8 ; Flow
-		0xCDBFA3, ;  9 ; Commands
-		0x7CC8CF, ; 10 ; Functions
-		0xCB8DD9, ; 11 ; Key names
-		0xE4EDED  ; 12 ; Other keywords
-	],
+	"Colors": {
+		"Comments":     0x7F9F7F,
+		"Functions":    0x7CC8CF,
+		"Keywords":     0xE4EDED,
+		"Multiline":    0x7F9F7F,
+		"Numbers":      0xF79B57,
+		"Punctuation":  0x97C0EB,
+		"Strings":      0xCC9893,
+		"A_Builtins":   0xF79B57,
+		"Commands":     0xCDBFA3,
+		"Directives":   0x7CC8CF,
+		"Flow":         0xE4EDED,
+		"KeyNames":     0xCB8DD9
+	},
 	
 	; Auto-Indenter
 	"Indent": "`t",
