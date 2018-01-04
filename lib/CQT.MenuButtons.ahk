@@ -117,7 +117,7 @@ class MenuButtons
 		MsgBox,, % this.Parent.Title " - About", CodeQuickTester written by GeekDude
 	}
 	
-	Install()
+	ServiceHandler()
 	{
 		Gui, +OwnDialogs
 		if ServiceHandler.Installed()
@@ -125,14 +125,20 @@ class MenuButtons
 			MsgBox, 36, % this.Parent.Title " - Uninstall Service Handler"
 			, Are you sure you want to remove CodeQuickTester from being the default service handler for "ahk:" links?
 			IfMsgBox, Yes
+			{
 				ServiceHandler.Remove()
+				Menu, % this.Parent.Menus[4], Uncheck, Install Service Handler
+			}
 		}
 		else
 		{
 			MsgBox, 36, % this.Parent.Title " - Install Service Handler"
 			, Are you sure you want to install CodeQuickTester as the default service handler for "ahk:" links?
 			IfMsgBox, Yes
+			{
 				ServiceHandler.Install()
+				Menu, % this.Parent.Menus[4], Check, Install Service Handler
+			}
 		}
 	}
 	

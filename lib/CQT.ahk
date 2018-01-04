@@ -42,7 +42,7 @@ class CodeQuickTester
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
 				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
 				["Global Run Hotkeys", Buttons.GlobalRun.Bind(Buttons)],
-				["Install", Buttons.Install.Bind(Buttons)]
+				["Install Service Handler", Buttons.ServiceHandler.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
 				["&About", Buttons.About.Bind(Buttons)]
@@ -64,6 +64,10 @@ class CodeQuickTester
 		; If set as default, check the global run hotkeys option
 		if this.Settings.GlobalRun
 			Menu, % this.Menus[4], Check, Global Run Hotkeys
+		
+		; If service handler is installed, check the menu option
+		if ServiceHandler.Installed()
+			Menu, % this.Menus[4], Check, Install Service Handler
 		
 		; Register for events
 		WinEvents.Register(this.hMainWindow, this)
