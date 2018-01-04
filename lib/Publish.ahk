@@ -210,7 +210,7 @@ StrStartsWith(ByRef v, ByRef w)
 
 RegExEscape(String)
 {
-	return "\Q" RegExReplace(String, "\\E", "\E\\E\Q") "\E"
+	return "\Q" StrReplace(String, "\E", "\E\\E\Q") "\E"
 }
 
 Util_TempFile(d:="")
