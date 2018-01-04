@@ -32,15 +32,11 @@ class MenuButtons
 	}
 	
 	Publish()
-	{
-		Gui, +OwnDialogs
-		FileSelectFile, FilePath, S18,, % this.Parent.Title " - Publish Code"
-		if ErrorLevel
-			return
-		
-		FileOpen(FilePath, "w").Write(this.Parent.RichCode.Value)
-		PreprocessScript(Text, FilePath, [])
-		FileOpen(FilePath, "w").Write(Text)
+	{ ; TODO: Recycle PubInstance
+		if WinExist("ahk_id" this.PubInstance.hWnd)
+			WinActivate, % "ahk_id" this.PubInstance.hWnd
+		else
+			this.PubInstance := new this.Parent.Publish(this.Parent)
 	}
 	
 	Fetch()

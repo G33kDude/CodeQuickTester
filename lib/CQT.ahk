@@ -232,6 +232,7 @@ class CodeQuickTester
 	}
 	
 	#Include CQT.Paste.ahk
+	#Include CQT.Publish.ahk
 	#Include CQT.ScriptOpts.ahk
 	#Include CQT.MenuButtons.ahk
 }
