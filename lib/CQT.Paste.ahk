@@ -1,5 +1,7 @@
 class Paste
 {
+	static Targets := {"IRC": "#ahk", "Discord": "discord"}
+	
 	__New(Parent)
 	{
 		this.Parent := Parent
@@ -22,7 +24,7 @@ class Paste
 		Gui, Add, Edit, x+5 yp w100 h22 hWndhPasteName, % this.Parent.Settings.DefaultName
 		this.hPasteName := hPasteName
 		
-		Gui, Add, ComboBox, x+5 yp w75 hWndhPasteChan, Announce||#ahk|#ahkscript
+		Gui, Add, DropDownList, x+5 yp w75 hWndhPasteChan, Announce||IRC|Discord
 		this.hPasteChan := hPasteChan
 		
 		PostMessage, 0x153, -1, 22-6,, ahk_id %hPasteChan% ; Set height of ComboBox
@@ -50,7 +52,7 @@ class Paste
 		GuiControlGet, PasteChan,, % this.hPasteChan
 		this.GuiClose()
 		
-		Link := Ahkbin(this.Parent.RichCode.Value, PasteName, PasteDesc, PasteChan)
+		Link := Ahkbin(this.Parent.RichCode.Value, PasteName, PasteDesc, this.Targets[PasteChan])
 		
 		MsgBox, 292, % this.Parent.Title " - Pasted", Link received:`n%Link%`n`nCopy to clipboard?
 		IfMsgBox, Yes
