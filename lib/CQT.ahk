@@ -117,7 +117,7 @@ class CodeQuickTester
 		
 		; Add status bar
 		Gui, Add, StatusBar
-		SB_SetParts(70, 70, 70, 70)
+		SB_SetParts(70, 70, 60, 70, 60)
 		this.UpdateStatusBar()
 		
 		Gui, Show, w640 h480, % this.Title
@@ -172,6 +172,35 @@ class CodeQuickTester
 		}
 	}
 	
+	GetKeywordFromCaret()
+	{
+		; https://autohotkey.com/boards/viewtopic.php?p=180369#p180369
+		static Buffer
+		IsUnicode := !!A_IsUnicode
+		
+		rc := this.RichCode
+		sel := rc.Selection
+		
+		; Get the currently selected line
+		LineNum := rc.SendMsg(0x436, 0, sel[1]) ; EM_EXLINEFROMCHAR
+		
+		; Size a buffer according to the line's length
+		Length := rc.SendMsg(0xC1, sel[1], 0) ; EM_LINELENGTH
+		VarSetCapacity(Buffer, Length << !!A_IsUnicode, 0)
+		NumPut(Length, Buffer, "UShort")
+		
+		; Get the text from the line
+		rc.SendMsg(0xC4, LineNum, &Buffer) ; EM_GETLINE
+		lineText := StrGet(&Buffer, 1024)
+		
+		; Parse the line to find the word
+		LineIndex := rc.SendMsg(0xBB, LineNum, 0) ; EM_LINEINDEX
+		RegExMatch(SubStr(lineText, 1, sel[1]-LineIndex), "[#\w]+$", Start)
+		RegExMatch(SubStr(lineText, sel[1]-LineIndex+1), "^[#\w]+", End)
+		
+		return Start . End
+	}
+	
 	UpdateStatusBar()
 	{
 		; Delete the timer if it was called by one
@@ -191,13 +220,16 @@ class CodeQuickTester
 		SB_SetText("Line " Row, 2)
 		SB_SetText("Col " Col, 3)
 		
-		SB_SetText(this.RichCode.Modified ? "Modified" : "Clean", 4)
-		
 		Selection := this.RichCode.Selection
 		; If the user has selected 1 char further than the end of the document,
 		; which is allowed in a RichEdit control, subtract 1 from the length
 		Len := Selection[2] - Selection[1] - (Selection[2] > Len)
-		SB_SetText(Len > 0 ? "Selection Length: " Len : "", 5) ; >0 because sometimes it comes up as -1 if you hold down paste
+		SB_SetText("Sel: " (Len > 0 ? Len : 0), 4) ; >0 because sometimes it comes up as -1 if you hold down paste
+		
+		SB_SetText(this.RichCode.Modified ? "Modified" : "Clean", 5)
+		
+		if (Syntax := HelpFile.GetSyntax(this.GetKeywordFromCaret()))
+			SB_SetText(Syntax, 6)
 	}
 	
 	RegisterCloseCallback(CloseCallback)
