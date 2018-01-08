@@ -22,7 +22,8 @@ class HelpFile
 		
 		; Scrape the command reference
 		this.Commands := {}
-		Page := this.GetPage("commands/index.htm")
+		try
+			Page := this.GetPage("commands/index.htm")
 		rows := Page.querySelectorAll(".info td:first-child a")
 		loop, % rows.length
 			for i, text in StrSplit((row := rows[A_Index-1]).innerText, "/")
@@ -31,7 +32,8 @@ class HelpFile
 		
 		; Scrape the variables page
 		this.Variables := {}
-		Page := this.GetPage("Variables.htm")
+		try
+			Page := this.GetPage("Variables.htm")
 		rows := html.querySelectorAll(".info td:first-child")
 		loop, % rows.length
 			if RegExMatch((row := rows[A_Index-1]).innerText, "(A_\w+)", Match)
