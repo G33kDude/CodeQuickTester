@@ -98,3 +98,4 @@ TesterClose(Tester)
 #Include AutoIndent.ahk
 #Include Utils.ahk
 #Include Publish.ahk
+#Include HelpFile.ahk

@@ -108,7 +108,7 @@ class MenuButtons
 	
 	Help()
 	{
-		Run, hh %A_AhkPath%\..\AutoHotkey.chm
+		HelpFile.Open(this.Parent.GetKeywordFromCaret())
 	}
 	
 	About()
