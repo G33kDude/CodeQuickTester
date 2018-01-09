@@ -33,6 +33,7 @@ class CodeQuickTester
 				["&Publish", Buttons.Publish.Bind(Buttons)],
 				["&Fetch", Buttons.Fetch.Bind(Buttons)]
 			]], ["&Edit", [
+				["Find`tCtrl+F", Buttons.Find.Bind(Buttons)],
 				["Comment Lines`tCtrl+k", Buttons.Comment.Bind(Buttons)],
 				["Uncomment Lines`tCtrl+Shift+k", Buttons.Uncomment.Bind(Buttons)],
 				["Indent Lines", this.Bound.Indent],
@@ -287,6 +288,7 @@ class CodeQuickTester
 	
 	#Include CQT.Paste.ahk
 	#Include CQT.Publish.ahk
+	#Include CQT.Find.ahk
 	#Include CQT.ScriptOpts.ahk
 	#Include CQT.MenuButtons.ahk
 }

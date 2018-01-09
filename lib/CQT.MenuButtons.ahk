@@ -52,6 +52,14 @@ class MenuButtons
 			this.Parent.LoadCode(UrlDownloadToVar(Url))
 	}
 	
+	Find()
+	{ ; TODO: Recycle FindInstance
+		if WinExist("ahk_id" this.FindInstance.hWnd)
+			WinActivate, % "ahk_id" this.FindInstance.hWnd
+		else
+			this.FindInstance := new this.Parent.Find(this.Parent)
+	}
+	
 	Paste()
 	{ ; TODO: Recycle PasteInstance
 		if WinExist("ahk_id" this.PasteInstance.hWnd)
