@@ -192,7 +192,7 @@ class CodeQuickTester
 		
 		; Get the text from the line
 		rc.SendMsg(0xC4, LineNum, &Buffer) ; EM_GETLINE
-		lineText := StrGet(&Buffer, 1024)
+		lineText := StrGet(&Buffer, Length)
 		
 		; Parse the line to find the word
 		LineIndex := rc.SendMsg(0xBB, LineNum, 0) ; EM_LINEINDEX
