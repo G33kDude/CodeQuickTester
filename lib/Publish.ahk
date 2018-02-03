@@ -32,7 +32,7 @@ PreprocessScript(ByRef ScriptText, AhkScript, KeepComments=1, KeepIndent=1, Keep
 		{
 			if !contSection
 			{
-				if StrStartsWith(tline, Options.comm)
+				if StrStartsWith(tline, Options.comm) && !KeepComments
 					continue
 				else if (tline = "" && !KeepEmpties)
 					continue
