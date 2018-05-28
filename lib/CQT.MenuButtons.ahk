@@ -208,6 +208,48 @@ class MenuButtons
 		this.Parent.RichCode.IndentSelection(True)
 	}
 	
+	IncludeRel()
+	{
+		FileSelectFile, AbsPath, 1,, Pick a script to include, AutoHotkey Scripts (*.ahk)
+		if ErrorLevel
+			return
+		
+		; Get the relative path
+		VarSetCapacity(RelPath, A_IsUnicode?520:260) ; MAX_PATH
+		if !DllCall("Shlwapi.dll\PathRelativePathTo"
+			, "Str", RelPath                    ; Out Directory
+			, "Str", A_WorkingDir, "UInt", 0x10 ; From Directory
+			, "Str", AbsPath, "UInt", 0x10)     ; To Directory
+			throw Exception("Relative path could not be found")
+		
+		; Select the start of the line
+		RC := this.Parent.RichCode
+		Top := RC.SendMsg(0x436, 0, RC.Selection[1]) ; EM_EXLINEFROMCHAR
+		TopLineIndex := RC.SendMsg(0xBB, Top, 0) ; EM_LINEINDEX
+		RC.Selection := [TopLineIndex, TopLineIndex]
+		
+		; Insert the include
+		RC.SelectedText := "#Include " RelPath "`n"
+		RC.Selection[1] := RC.Selection[2]
+	}
+	
+	IncludeAbs()
+	{
+		FileSelectFile, AbsPath, 1,, Pick a script to include, AutoHotkey Scripts (*.ahk)
+		if ErrorLevel
+			return
+		
+		; Select the start of the line
+		RC := this.Parent.RichCode
+		Top := RC.SendMsg(0x436, 0, RC.Selection[1]) ; EM_EXLINEFROMCHAR
+		TopLineIndex := RC.SendMsg(0xBB, Top, 0) ; EM_LINEINDEX
+		RC.Selection := [TopLineIndex, TopLineIndex]
+		
+		; Insert the include
+		RC.SelectedText := "#Include " AbsPath "`n"
+		RC.Selection[1] := RC.Selection[2]
+	}
+	
 	AutoComplete()
 	{
 		if (this.Parent.Settings.UseAutoComplete := !this.Parent.Settings.UseAutoComplete)

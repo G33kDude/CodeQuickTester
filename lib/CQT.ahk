@@ -39,6 +39,8 @@ class CodeQuickTester
 				["Uncomment Lines`tCtrl+Shift+k", Buttons.Uncomment.Bind(Buttons)],
 				["Indent Lines", this.Bound.Indent],
 				["Unindent Lines", this.Bound.Unindent],
+				["Include &Relative", Buttons.IncludeRel.Bind(Buttons)],
+				["Include &Absolute", Buttons.IncludeAbs.Bind(Buttons)],
 				["Script &Options", Buttons.ScriptOpts.Bind(Buttons)]
 			]], ["&Tools", [
 				["&Pastebin`tCtrl+P", Buttons.Paste.Bind(Buttons)],
