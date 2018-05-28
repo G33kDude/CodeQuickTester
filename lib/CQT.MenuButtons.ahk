@@ -207,4 +207,14 @@ class MenuButtons
 	{
 		this.Parent.RichCode.IndentSelection(True)
 	}
+	
+	AutoComplete()
+	{
+		if (this.Parent.Settings.UseAutoComplete := !this.Parent.Settings.UseAutoComplete)
+			Menu, % this.Parent.Menus[4], Check, AutoComplete
+		else
+			Menu, % this.Parent.Menus[4], Uncheck, AutoComplete
+		
+		this.Parent.AC.Enabled := this.Parent.Settings.UseAutoComplete
+	}
 }

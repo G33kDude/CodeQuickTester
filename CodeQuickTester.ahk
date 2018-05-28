@@ -54,7 +54,11 @@ Settings :=
 	
 	; Pastebin
 	"DefaultName": "GeekDude",
-	"DefaultDesc": ""
+	"DefaultDesc": "",
+	
+	; AutoComplete
+	"UseAutoComplete": True,
+	"ACListRebuildDelay": 500 ; Delay until the user is finished typing
 }
 )
 

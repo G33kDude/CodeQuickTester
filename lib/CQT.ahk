@@ -16,6 +16,7 @@ class CodeQuickTester
 		this.Bound.RunButton := this.RunButton.Bind(this)
 		this.Bound.OnMessage := this.OnMessage.Bind(this)
 		this.Bound.UpdateStatusBar := this.UpdateStatusBar.Bind(this)
+		this.Bound.UpdateAutoComplete := this.UpdateAutoComplete.Bind(this)
 		this.Bound.CheckIfRunning := this.CheckIfRunning.Bind(this)
 		this.Bound.Highlight := this.Highlight.Bind(this)
 		
@@ -46,7 +47,8 @@ class CodeQuickTester
 				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
 				["Global Run Hotkeys", Buttons.GlobalRun.Bind(Buttons)],
 				["Install Service Handler", Buttons.ServiceHandler.Bind(Buttons)],
-				["Set as Default Editor", Buttons.DefaultEditor.Bind(Buttons)]
+				["Set as Default Editor", Buttons.DefaultEditor.Bind(Buttons)],
+				["AutoComplete", Buttons.AutoComplete.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
 				["&About", Buttons.About.Bind(Buttons)]
@@ -69,6 +71,10 @@ class CodeQuickTester
 		if this.Settings.GlobalRun
 			Menu, % this.Menus[4], Check, Global Run Hotkeys
 		
+		; If set as default, check the AutoComplete option
+		if this.Settings.UseAutoComplete
+			Menu, % this.Menus[4], Check, AutoComplete
+		
 		; If service handler is installed, check the menu option
 		if ServiceHandler.Installed()
 			Menu, % this.Menus[4], Check, Install Service Handler
@@ -79,7 +85,7 @@ class CodeQuickTester
 		
 		; Register for events
 		WinEvents.Register(this.hMainWindow, this)
-		for each, Msg in [0x100, 0x201, 0x202, 0x204] ; WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
+		for each, Msg in [0x111, 0x100, 0x101, 0x201, 0x202, 0x204] ; WM_COMMAND, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
 			OnMessage(Msg, this.Bound.OnMessage)
 		
 		; Add code editor
@@ -120,6 +126,9 @@ class CodeQuickTester
 		Gui, Add, StatusBar
 		SB_SetParts(70, 70, 60, 70, 60)
 		this.UpdateStatusBar()
+		
+		; Initialize the AutoComplete
+		this.AC := new this.AutoComplete(this, this.settings.UseAutoComplete)
 		
 		Gui, Show, w640 h480, % this.Title
 	}
@@ -170,6 +179,25 @@ class CodeQuickTester
 		{
 			; Call UpdateStatusBar after the edit handles the keystroke
 			SetTimer(this.Bound.UpdateStatusBar, -0)
+			
+			if this.Settings.UseAutoComplete
+			{
+				SetTimer(this.Bound.UpdateAutoComplete
+					, -Abs(this.Settings.ACListRebuildDelay))
+				
+				if (Msg == 0x100) ; WM_KEYDOWN
+					return this.AC.WM_KEYDOWN(wParam, lParam)
+				else if (Msg == 0x201) ; WM_LBUTTONDOWN
+					this.AC.Fragment := ""
+			}
+		}
+		else if (hWnd == this.hMainWindow && Msg == 0x111 ; WM_COMMAND
+			&& lParam == this.RichCode.hWnd               ; for RichEdit
+			&& this.Settings.UseAutoComplete              ; AC enabled
+			&& ((wParam >> 16) & 0xFFFF) == 0x200)        ; EN_KILLFOCUS
+		{
+			if this.Settings.UseAutoComplete
+				this.AC.Fragment := ""
 		}
 	}
 	
@@ -233,6 +261,14 @@ class CodeQuickTester
 			SB_SetText(Syntax, 6)
 	}
 	
+	UpdateAutoComplete()
+	{
+		; Delete the timer if it was called by one
+		SetTimer(this.Bound.UpdateAutoComplete, "Delete")
+		
+		this.AC.BuildWordList()
+	}
+	
 	RegisterCloseCallback(CloseCallback)
 	{
 		this.CloseCallback := CloseCallback
@@ -266,6 +302,9 @@ class CodeQuickTester
 			this.Exec.Terminate()
 		}
 		
+		; Free up the AC class
+		this.AC := ""
+		
 		; Release wm_message hooks
 		for each, Msg in [0x100, 0x201, 0x202, 0x204] ; WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
 			OnMessage(Msg, this.Bound.OnMessage, 0)
@@ -291,4 +330,5 @@ class CodeQuickTester
 	#Include CQT.Find.ahk
 	#Include CQT.ScriptOpts.ahk
 	#Include CQT.MenuButtons.ahk
+	#Include CQT.AutoComplete.ahk
 }
