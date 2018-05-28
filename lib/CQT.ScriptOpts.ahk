@@ -48,7 +48,7 @@ class ScriptOpts
 	SelectFile()
 	{
 		GuiControlGet, AhkPath,, % this.hAhkPath
-		FileSelectFile, AhkPath, 1, %AhkPath%\.., Pick an AHK EXE, Executables (*.exe)
+		FileSelectFile, AhkPath, 1, %AhkPath%, Pick an AHK EXE, Executables (*.exe)
 		if !AhkPath
 			return
 		this.Parent.Settings.AhkPath := AhkPath
@@ -57,8 +57,7 @@ class ScriptOpts
 	
 	SelectPath()
 	{
-		GuiControlGet, WorkingDir,, % this.hWorkingDir
-		FileSelectFolder, WorkingDir,, 0, Choose the Working Directory
+		FileSelectFolder, WorkingDir, *%A_WorkingDir%, 0, Choose the Working Directory
 		if !WorkingDir
 			return
 		SetWorkingDir, %WorkingDir%
