@@ -31,6 +31,11 @@ class MenuButtons
 		this.Parent.ScriptOpts.UpdateFields()
 	}
 	
+	OpenFolder()
+	{
+		Run, explorer.exe "%A_WorkingDir%"
+	}
+	
 	New()
 	{
 		Run, "%A_AhkPath%" "%A_ScriptFullPath%"

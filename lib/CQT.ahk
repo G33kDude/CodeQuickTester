@@ -31,6 +31,7 @@ class CodeQuickTester
 				[],
 				["&New`tCtrl+N", Buttons.New.Bind(Buttons)],
 				["&Open`tCtrl+O", Buttons.Open.Bind(Buttons)],
+				["Open &Working Dir`tCtrl+Shift+O", Buttons.OpenFolder.Bind(Buttons)],
 				["&Save`tCtrl+S", Buttons.Save.Bind(Buttons)],
 				[],
 				["&Publish", Buttons.Publish.Bind(Buttons)],
