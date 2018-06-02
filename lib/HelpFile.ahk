@@ -112,8 +112,8 @@ class HelpFile
 			Nodes := page.getElementsByTagName("pre")
 		
 		try ; Windows
-			Text := Nodes[0].innerText
-		catch ; Wine
+			Text := Nodes.Item(0).innerText
+		catch ; Some versions of Wine
 			Text := Nodes.Item(0).innerHTML
 		
 		; Cache and return the result
