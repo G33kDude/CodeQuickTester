@@ -76,11 +76,13 @@ class AutoComplete
 	{
 		this.Parent := Parent
 		this.Enabled := Enabled
+		this.WineVer := DllCall("ntdll.dll\wine_get_version", "AStr")
 		
 		; Create the tool GUI for the floating list
 		hParentWnd := this.Parent.hMainWindow
 		Gui, +hWndhDefaultWnd
-		Gui, New, +Owner%hParentWnd% -Caption +ToolWindow +hWndhWnd
+		Relation := this.WineVer ? "Parent" Parent.RichCode.hWnd : "Owner" Parent.hMainWindow
+		Gui, New, +%Relation% -Caption +ToolWindow +hWndhWnd
 		this.hWnd := hWnd
 		Gui, Margin, 0, 0
 		
@@ -279,7 +281,7 @@ class AutoComplete
 		; Record the starting position of new fragments
 		if (this.Fragment == "")
 		{
-			CoordMode, Caret
+			CoordMode, Caret, % this.WineVer ? "Client" : "Screen"
 			
 			; Round "" to 0, which can prevent errors in the unlikely case that
 			; input is received while the control is not focused.
