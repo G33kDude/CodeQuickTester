@@ -24,10 +24,20 @@ class HelpFile
 		this.Commands := {}
 		try
 			Page := this.GetPage("commands/index.htm")
+		
 		try ; Windows
 			rows := Page.querySelectorAll(".info td:first-child a")
 		catch ; Wine
-			rows := Page.body.querySelectorAll(".info td:first-child a")
+			try
+				rows := Page.body.querySelectorAll(".info td:first-child a")
+		catch ; IE8
+		{
+			rows := new this.HTMLCollection()
+			trows := Page.getElementsByTagName("table")[0].children[0].children
+			loop, % trows.length
+				rows.push(trows.Item(A_Index-1).children[0].children[0])
+		}
+		
 		loop, % rows.length
 			for i, text in StrSplit((row := rows.Item(A_Index-1)).innerText, "/")
 				if RegExMatch(text, "^[\w#]+", Match) && !this.Commands.HasKey(Match)
@@ -37,10 +47,24 @@ class HelpFile
 		this.Variables := {}
 		try
 			Page := this.GetPage("Variables.htm")
+		
 		try ; Windows
 			rows := Page.querySelectorAll(".info td:first-child")
 		catch ; Wine
-			rows := Page.body.querySelectorAll(".info td:first-child")
+			try
+				rows := Page.body.querySelectorAll(".info td:first-child")
+		catch ; IE8
+		{
+			rows := new this.HTMLCollection()
+			tables := Page.getElementsByTagName("table")
+			loop, % tables.length
+			{
+				trows := tables.Item(A_Index-1).children[0].children
+				loop, % trows.length
+					rows.push(trows.Item(A_Index-1).children[0])
+			}
+		}
+		
 		loop, % rows.length
 			if RegExMatch((row := rows.Item(A_Index-1)).innerText, "(A_\w+)", Match)
 				this.Variables[Match1] := "Variables.htm#" row.parentNode.getAttribute("id")
@@ -82,7 +106,10 @@ class HelpFile
 		try ; Windows
 			Nodes := page.getElementsByClassName("Syntax")
 		catch ; Wine
-			Nodes := page.body.getElementsByClassName("Syntax")
+			try
+				Nodes := page.body.getElementsByClassName("Syntax")
+		catch ; IE8
+			Nodes := page.getElementsByTagName("pre")
 		
 		try ; Windows
 			Text := Nodes[0].innerText
@@ -92,5 +119,23 @@ class HelpFile
 		; Cache and return the result
 		this.Cache.Syntax[Keyword] := StrSplit(Text, "`n", "`r")[1]
 		return this.Cache.Syntax[Keyword]
+	}
+	
+	class HTMLCollection
+	{
+		length[]
+		{
+			get
+			{
+				; Rounding MaxIndex produces a similar effect
+				; to this.Length(), but doesn't trigger recursion
+				return Round(this.MaxIndex())
+			}
+		}
+		
+		Item(i)
+		{
+			return this[i+1]
+		}
 	}
 }
