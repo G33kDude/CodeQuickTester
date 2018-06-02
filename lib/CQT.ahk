@@ -28,29 +28,39 @@ class CodeQuickTester
 		[
 			["&File", [
 				["&Run`tF5", this.Bound.RunButton],
-				["&Save`tCtrl+S", Buttons.Save.Bind(Buttons)],
-				["&Open`tCtrl+O", Buttons.Open.Bind(Buttons)],
+				[],
 				["&New`tCtrl+N", Buttons.New.Bind(Buttons)],
+				["&Open`tCtrl+O", Buttons.Open.Bind(Buttons)],
+				["&Save`tCtrl+S", Buttons.Save.Bind(Buttons)],
+				[],
 				["&Publish", Buttons.Publish.Bind(Buttons)],
 				["&Fetch", Buttons.Fetch.Bind(Buttons)],
+				[],
 				["E&xit`tCtrl+W", this.GuiClose.Bind(this)]
 			]], ["&Edit", [
 				["Find`tCtrl+F", Buttons.Find.Bind(Buttons)],
-				["Comment Lines`tCtrl+k", Buttons.Comment.Bind(Buttons)],
-				["Uncomment Lines`tCtrl+Shift+k", Buttons.Uncomment.Bind(Buttons)],
+				[],
+				["Comment Lines`tCtrl+K", Buttons.Comment.Bind(Buttons)],
+				["Uncomment Lines`tCtrl+Shift+K", Buttons.Uncomment.Bind(Buttons)],
+				[],
 				["Indent Lines", this.Bound.Indent],
 				["Unindent Lines", this.Bound.Unindent],
+				[],
 				["Include &Relative", Buttons.IncludeRel.Bind(Buttons)],
 				["Include &Absolute", Buttons.IncludeAbs.Bind(Buttons)],
+				[],
 				["Script &Options", Buttons.ScriptOpts.Bind(Buttons)]
 			]], ["&Tools", [
 				["&Pastebin`tCtrl+P", Buttons.Paste.Bind(Buttons)],
 				["Re&indent`tCtrl+I", Buttons.AutoIndent.Bind(Buttons)],
+				[],
 				["&AlwaysOnTop`tAlt+A", Buttons.ToggleOnTop.Bind(Buttons)],
-				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
 				["Global Run Hotkeys", Buttons.GlobalRun.Bind(Buttons)],
+				[],
 				["Install Service Handler", Buttons.ServiceHandler.Bind(Buttons)],
 				["Set as Default Editor", Buttons.DefaultEditor.Bind(Buttons)],
+				[],
+				["&Highlighter", Buttons.Highlighter.Bind(Buttons)],
 				["AutoComplete", Buttons.AutoComplete.Bind(Buttons)]
 			]], ["&Help", [
 				["Open &Help File`tCtrl+H", Buttons.Help.Bind(Buttons)],
