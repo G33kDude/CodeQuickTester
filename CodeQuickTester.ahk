@@ -53,8 +53,8 @@ Settings :=
 	"Indent": "`t",
 	
 	; Pastebin
-	"DefaultName": "GeekDude",
-	"DefaultDesc": "",
+	"DefaultName": A_UserName,
+	"DefaultDesc": "Pasted with CodeQuickTester",
 	
 	; AutoComplete
 	"UseAutoComplete": True,
