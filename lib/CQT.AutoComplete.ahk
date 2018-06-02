@@ -61,11 +61,12 @@ class AutoComplete
 		
 		set
 		{
+			this._Enabled := Value
 			if (Value)
 				this.BuildWordList()
 			else
 				this.Fragment := ""
-			return this._Enabled := Value
+			return Value
 		}
 	}
 	
