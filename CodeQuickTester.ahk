@@ -62,6 +62,17 @@ Settings :=
 }
 )
 
+; Overlay any external settings onto the above defaults
+if FileExist("Settings.ini")
+{
+	ExtSettings := Ini_Load(FileOpen("Settings.ini", "r").Read())
+	for k, v in ExtSettings
+		if IsObject(v)
+			v.base := Settings[k]
+	ExtSettings.base := Settings
+	Settings := ExtSettings
+}
+
 Tester := new CodeQuickTester(Settings)
 Tester.RegisterCloseCallback(Func("TesterClose"))
 return

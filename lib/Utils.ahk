@@ -113,3 +113,18 @@ CreateMenus(Menu)
 	}
 	return Menus
 }
+
+Ini_Load(Contents)
+{
+	Section := Out := []
+	loop, Parse, Contents, `n, `r
+	{
+		if ((Line := Trim(A_LoopField)) ~= "^;|^$")
+			continue
+		else if RegExMatch(Line, "^\[(.+)\]$", Match)
+			Out[Match1] := (Section := [])
+		else if RegExMatch(Line, "^(.+?)=(.*)$", Match)
+			Section[Trim(Match1)] := Trim(Match2)
+	}
+	return Out
+}
