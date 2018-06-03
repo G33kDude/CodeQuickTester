@@ -15,6 +15,8 @@ ExecScript(Script, Params="", AhkPath="")
 	}
 	if !FileExist(AhkPath)
 		throw Exception("AutoHotkey runtime not found: " AhkPath)
+	if (A_IsCompiled && AhkPath == A_ScriptFullPath)
+		AhkPath .= " /E"
 	if FileExist(Name)
 	{
 		Exec := Shell.Exec(AhkPath " /CP65001 " Name " " Params)
