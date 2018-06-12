@@ -102,7 +102,7 @@ into a portable exe file, you can follow these steps:
 and AHK!](https://autohotkey.com/boards/viewtopic.php?p=190819)
 
 [RichCode.ahk - A pure-AHK code editing control that supports custom syntax
-highlighting](https://autohotkey.com/boards/viewtopic.php?p=190819)
+highlighting](https://github.com/G33kDude/RichCode.ahk)
 
 
 ---
