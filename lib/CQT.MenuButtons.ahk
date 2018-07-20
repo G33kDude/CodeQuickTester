@@ -24,7 +24,7 @@ class MenuButtons
 		FileSelectFile, FilePath, 3,, % this.Parent.Title " - Open Code"
 		if ErrorLevel
 			return
-		this.Parent.LoadCode(FileOpen(FilePath, "r").Read())
+		this.Parent.LoadCode(FileOpen(FilePath, "r").Read(), FilePath)
 		
 		; Follow the directory of the most recently opened file
 		SetWorkingDir, %FilePath%\..

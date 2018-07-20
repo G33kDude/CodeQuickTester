@@ -114,9 +114,10 @@ class CodeQuickTester
 			this.RichCode.Value := UrlDownloadToVar(FilePath)
 		else if (FilePath = "Clipboard")
 			this.RichCode.Value := Clipboard
-		else
+		else if InStr(FileExist(FilePath), "A")
 		{
 			this.RichCode.Value := FileOpen(FilePath, "r").Read()
+			this.RichCode.Modified := False
 			
 			if (FilePath == this.DefaultPath)
 			{
@@ -125,10 +126,15 @@ class CodeQuickTester
 			}
 			else
 			{
+				; Keep track of the file currently being edited
+				this.FilePath := GetFullPathName(FilePath)
+				
 				; Follow the directory of the most recently opened file
 				SetWorkingDir, %FilePath%\..
 			}
 		}
+		else
+			this.RichCode.Value := ""
 		
 		; Add run button
 		Gui, Add, Button, hWndhRunButton, &Run
@@ -172,7 +178,7 @@ class CodeQuickTester
 		}
 	}
 	
-	LoadCode(Code)
+	LoadCode(Code, FilePath:="")
 	{
 		CodeEditor := this.RichCode.Value
 		if (CodeEditor && CodeEditor != Code) ; TODO: Do I need to Trim() here?
@@ -182,6 +188,11 @@ class CodeQuickTester
 			IfMsgBox, No
 				return
 		}
+		
+		; Keep track of the file currently being edited
+		this.FilePath := FilePath
+		
+		; Update the GUI
 		this.RichCode.Value := Code
 		this.RichCode.Modified := False
 		this.UpdateStatusBar()
@@ -297,7 +308,7 @@ class CodeQuickTester
 	GuiDropFiles(hWnd, Files)
 	{
 		; TODO: support multiple file drop
-		this.LoadCode(FileOpen(Files[1], "r").Read())
+		this.LoadCode(FileOpen(Files[1], "r").Read(), Files[1])
 	}
 	
 	GuiClose()
