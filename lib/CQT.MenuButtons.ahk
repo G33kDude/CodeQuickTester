@@ -5,14 +5,20 @@ class MenuButtons
 		this.Parent := Parent
 	}
 	
-	Save()
+	Save(SaveAs)
 	{
-		Gui, +OwnDialogs
-		FileSelectFile, FilePath, S18,, % this.Parent.Title " - Save Code"
-		if ErrorLevel
-			return
+		if (SaveAs || !this.Parent.FilePath)
+		{
+			Gui, +OwnDialogs
+			FileSelectFile, FilePath, S18,, % this.Parent.Title " - Save Code"
+			if ErrorLevel
+				return
+			this.Parent.FilePath := FilePath
+		}
 		
-		FileOpen(FilePath, "w").Write(this.Parent.RichCode.Value)
+		Value := this.Parent.RichCode.Value
+		Value := StrReplace(Value, "`r`n", "`n")
+		FileOpen(this.Parent.FilePath, "w", "UTF-8-RAW").Write(Value)
 		
 		this.Parent.RichCode.Modified := False
 		this.Parent.UpdateStatusBar()
