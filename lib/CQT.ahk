@@ -148,13 +148,14 @@ class CodeQuickTester
 		
 		; Add status bar
 		Gui, Add, StatusBar
-		SB_SetParts(70, 70, 60, 70, 60)
+		SB_SetParts(70, 70, 60, 70)
 		this.UpdateStatusBar()
 		
 		; Initialize the AutoComplete
 		this.AC := new this.AutoComplete(this, this.settings.UseAutoComplete)
 		
-		Gui, Show, w640 h480, % this.Title
+		this.UpdateTitle()
+		Gui, Show, w640 h480
 	}
 	
 	AddGutter()
@@ -332,10 +333,10 @@ class CodeQuickTester
 		Len := Selection[2] - Selection[1] - (Selection[2] > Len)
 		SB_SetText("Sel: " (Len > 0 ? Len : 0), 4) ; >0 because sometimes it comes up as -1 if you hold down paste
 		
-		SB_SetText(this.RichCode.Modified ? "Modified" : "Clean", 5)
+		this.UpdateTitle()
 		
 		if (Syntax := HelpFile.GetSyntax(this.GetKeywordFromCaret()))
-			SB_SetText(Syntax, 6)
+			SB_SetText(Syntax, 5)
 
 		if this.Settings.GutterWidth
 		{
@@ -349,6 +350,32 @@ class CodeQuickTester
 				this.LineCount := Lines
 			}
 		}
+	}
+	
+	UpdateTitle()
+	{
+		Title := this.Title
+		
+		; Show the current file name
+		if this.FilePath
+		{
+			SplitPath, % this.FilePath, FileName
+			Title .= " - " FileName
+		}
+		
+		; Show the curernt modification status
+		if this.RichCode.Modified
+			Title .= "*"
+		
+		; Return if the title doesn't need to be updated
+		if (Title == this.VisibleTitle)
+			return
+		this.VisibleTitle := Title
+		
+		HiddenWindows := A_DetectHiddenWindows
+		DetectHiddenWindows, On
+		WinSetTitle, % "ahk_id" this.hMainWindow,, %Title%
+		DetectHiddenWindows, %HiddenWindows%
 	}
 	
 	UpdateAutoComplete()
