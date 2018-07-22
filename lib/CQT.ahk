@@ -19,6 +19,7 @@ class CodeQuickTester
 		this.Bound.UpdateAutoComplete := this.UpdateAutoComplete.Bind(this)
 		this.Bound.CheckIfRunning := this.CheckIfRunning.Bind(this)
 		this.Bound.Highlight := this.Highlight.Bind(this)
+		this.Bound.SyncGutter := this.SyncGutter.Bind(this)
 		
 		Buttons := new this.MenuButtons(this)
 		this.Bound.Indent := Buttons.Indent.Bind(Buttons)
@@ -103,8 +104,10 @@ class CodeQuickTester
 		for each, Msg in [0x111, 0x100, 0x101, 0x201, 0x202, 0x204] ; WM_COMMAND, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
 			OnMessage(Msg, this.Bound.OnMessage)
 		
-		; Add code editor
+		; Add code editor and gutter for line numbers
 		this.RichCode := new RichCode(this.Settings)
+		if Settings.GutterWidth
+			this.AddGutter()
 		
 		if B_Params.HasKey(1)
 			FilePath := RegExReplace(B_Params[1], "^ahk:") ; Remove leading service handler
@@ -154,6 +157,27 @@ class CodeQuickTester
 		Gui, Show, w640 h480, % this.Title
 	}
 	
+	AddGutter()
+	{
+		s := this.Settings, f := s.Font
+		
+		; Add the RichEdit control for the gutter
+		Gui, Add, Custom, ClassRichEdit50W hWndhGutter +0x5031b1c4 +E0x20000 +HScroll -VScroll
+		this.hGutter := hGutter
+		
+		; Set the background and font settings
+		FGColor := RichCode.BGRFromRGB(s.FGColor)
+		BGColor := RichCode.BGRFromRGB(s.BGColor)
+		VarSetCapacity(CF2, 116, 0)
+		NumPut(116,        &CF2+ 0, "UInt") ; cbSize      = sizeof(CF2)
+		NumPut(0xE<<28,    &CF2+ 4, "UInt") ; dwMask      = CFM_COLOR|CFM_FACE|CFM_SIZE
+		NumPut(f.Size*20,  &CF2+12, "UInt") ; yHeight     = twips
+		NumPut(FGColor,    &CF2+20, "UInt") ; crTextColor = 0xBBGGRR
+		StrPut(f.Typeface, &CF2+26, 32, "UTF-16") ; szFaceName = TCHAR
+		SendMessage(0x444, 0, &CF2,    hGutter) ; EM_SETCHARFORMAT
+		SendMessage(0x443, 0, BGColor, hGutter) ; EM_SETBKGNDCOLOR
+	}
+	
 	RunButton()
 	{
 		if (this.Exec.Status == 0) ; Running
@@ -201,7 +225,25 @@ class CodeQuickTester
 	
 	OnMessage(wParam, lParam, Msg, hWnd)
 	{
-		if (hWnd == this.RichCode.hWnd)
+		if (hWnd == this.hMainWindow && Msg == 0x111 ; WM_COMMAND
+			&& lParam == this.RichCode.hWnd)         ; for RichEdit
+		{
+			Command := wParam >> 16
+			
+			if (Command == 0x400) ; An event that fires on scroll
+			{
+				this.SyncGutter()
+				
+				; If the user is scrolling too fast it can cause some messages
+				; to be dropped. Set a timer to make sure that when the user stops
+				; scrolling that the line numbers will be in sync.
+				SetTimer(this.Bound.SyncGutter, -50)
+			}
+			else if (Command == 0x200) ; EN_KILLFOCUS
+				if this.Settings.UseAutoComplete
+					this.AC.Fragment := ""
+		}
+		else if (hWnd == this.RichCode.hWnd)
 		{
 			; Call UpdateStatusBar after the edit handles the keystroke
 			SetTimer(this.Bound.UpdateStatusBar, -0)
@@ -217,14 +259,23 @@ class CodeQuickTester
 					this.AC.Fragment := ""
 			}
 		}
-		else if (hWnd == this.hMainWindow && Msg == 0x111 ; WM_COMMAND
-			&& lParam == this.RichCode.hWnd               ; for RichEdit
-			&& this.Settings.UseAutoComplete              ; AC enabled
-			&& ((wParam >> 16) & 0xFFFF) == 0x200)        ; EN_KILLFOCUS
+		else if (hWnd == this.hGutter
+			&& {0x100:1,0x101:1,0x201:1,0x202:1,0x204:1}[Msg]) ; WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
 		{
-			if this.Settings.UseAutoComplete
-				this.AC.Fragment := ""
+			; Disallow interaction with the gutter
+			return True
 		}
+	}
+	
+	SyncGutter()
+	{
+		static POINT := 0, _ := VarSetCapacity(POINT, 8, 0)
+		
+		if !this.Settings.GutterWidth
+			return
+		
+		SendMessage(0x4DD, 0, &POINT, this.RichCode.hwnd) ; EM_GETSCROLLPOS
+		PostMessage(0x4DE, 0, &POINT, this.hGutter)       ; EM_SETSCROLLPOS
 	}
 	
 	GetKeywordFromCaret()
@@ -285,6 +336,19 @@ class CodeQuickTester
 		
 		if (Syntax := HelpFile.GetSyntax(this.GetKeywordFromCaret()))
 			SB_SetText(Syntax, 6)
+
+		if this.Settings.GutterWidth
+		{
+			ControlGet, Lines, LineCount,,, ahk_id %hCodeEditor%
+			if (Lines != this.LineCount)
+			{
+				Loop, %Lines%
+					Text .= A_Index "`n"
+				GuiControl,, % this.hGutter, %Text%
+				this.SyncGutter()
+				this.LineCount := Lines
+			}
+		}
 	}
 	
 	UpdateAutoComplete()
@@ -302,8 +366,11 @@ class CodeQuickTester
 	
 	GuiSize()
 	{
-		GuiControl, Move, % this.RichCode.hWnd, % "x" 5 "y" 5 "w" A_GuiWidth-10 "h" A_GuiHeight-60
-		GuiControl, Move, % this.hRunButton, % "x" 5 "y" A_GuiHeight-50 "w" A_GuiWidth-10 "h" 22
+		gw := A_GuiWidth, gh := A_GuiHeight, gtw := Round(this.Settings.GutterWidth)
+		GuiControl, Move, % this.RichCode.hWnd, % "x" 5+gtw "y" 5     "w" gw-10-gtw "h" gh-60
+		if this.Settings.GutterWidth
+			GuiControl, Move, % this.hGutter  , % "x" 5     "y" 5     "w" gtw       "h" gh-60
+		GuiControl, Move, % this.hRunButton   , % "x" 5     "y" gh-50 "w" gw-10     "h" 22
 	}
 	
 	GuiDropFiles(hWnd, Files)
@@ -334,6 +401,9 @@ class CodeQuickTester
 		; Release wm_message hooks
 		for each, Msg in [0x100, 0x201, 0x202, 0x204] ; WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_RBUTTONDOWN
 			OnMessage(Msg, this.Bound.OnMessage, 0)
+		
+		; Delete timers
+		SetTimer(this.Bound.SyncGutter, "Delete")
 		
 		; Break all the BoundFunc circular references
 		this.Delete("Bound")

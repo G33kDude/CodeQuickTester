@@ -30,6 +30,11 @@ Settings :=
 		"Bold": False
 	},
 	
+	; Gutter width in pixels
+	; Make this larger when using larger fonts
+	; Set to 0 to disable the gutter
+	"GutterWidth": 40,
+	
 	; Highlighter (colors are 0xRRGGBB)
 	"UseHighlighter": True,
 	"Highlighter": "HighlightAHK",

@@ -73,6 +73,12 @@ SendMessage(Msg, wParam, lParam, hWnd)
 	return ErrorLevel
 }
 
+PostMessage(Msg, wParam, lParam, hWnd)
+{
+	PostMessage, Msg, wParam, lParam,, ahk_id %hWnd%
+	return ErrorLevel
+}
+
 Ahkbin(Content, Name="", Desc="", Channel="")
 {
 	static URL := "https://p.ahkscript.org/"
