@@ -1,7 +1,6 @@
 class CodeQuickTester
 {
 	static Msftedit := DllCall("LoadLibrary", "Str", "Msftedit.dll")
-	DefaultPath := "C:\Windows\ShellNew\Template.ahk"
 	EditorString := """" A_AhkPath """ """ A_ScriptFullPath """ ""%1"""
 	OrigEditorString := "notepad.exe %1"
 	Title := "CodeQuickTester"
@@ -112,7 +111,7 @@ class CodeQuickTester
 		if B_Params.HasKey(1)
 			FilePath := RegExReplace(B_Params[1], "^ahk:") ; Remove leading service handler
 		else
-			FilePath := this.DefaultPath
+			FilePath := Settings.DefaultPath
 		
 		if (FilePath ~= "^https?://")
 			this.RichCode.Value := UrlDownloadToVar(FilePath)
@@ -123,7 +122,7 @@ class CodeQuickTester
 			this.RichCode.Value := FileOpen(FilePath, "r").Read()
 			this.RichCode.Modified := False
 			
-			if (FilePath == this.DefaultPath)
+			if (FilePath == Settings.DefaultPath)
 			{
 				; Place cursor after the default template text
 				this.RichCode.Selection := [-1, -1]

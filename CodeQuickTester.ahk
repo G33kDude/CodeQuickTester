@@ -13,6 +13,9 @@ FileEncoding, UTF-8
 Settings :=
 ( LTrim Join Comments
 {
+	; File path for the starting contents
+	"DefaultPath": "C:\Windows\ShellNew\Template.ahk",
+	
 	; When True, this setting may conflict with other instances of CQT
 	"GlobalRun": False,
 	
