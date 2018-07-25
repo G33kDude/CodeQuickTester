@@ -13,6 +13,7 @@ class CodeQuickTester
 		
 		this.Bound := []
 		this.Bound.RunButton := this.RunButton.Bind(this)
+		this.Bound.GuiSize := this.GuiSize.Bind(this)
 		this.Bound.OnMessage := this.OnMessage.Bind(this)
 		this.Bound.UpdateStatusBar := this.UpdateStatusBar.Bind(this)
 		this.Bound.UpdateAutoComplete := this.UpdateAutoComplete.Bind(this)
@@ -269,13 +270,20 @@ class CodeQuickTester
 	
 	SyncGutter()
 	{
-		static POINT := 0, _ := VarSetCapacity(POINT, 8, 0)
+		static BUFF, _ := VarSetCapacity(BUFF, 16, 0)
 		
 		if !this.Settings.GutterWidth
 			return
 		
-		SendMessage(0x4DD, 0, &POINT, this.RichCode.hwnd) ; EM_GETSCROLLPOS
-		PostMessage(0x4DE, 0, &POINT, this.hGutter)       ; EM_SETSCROLLPOS
+		SendMessage(0x4E0, &BUFF, &BUFF+4, this.RichCode.hwnd) ; EM_GETZOOM
+		SendMessage(0x4DD, 0, &BUFF+8, this.RichCode.hwnd)     ; EM_GETSCROLLPOS
+		NumPut(-1, BUFF, 8, "UInt") ; Don't sync horizontal position
+		Zoom := [NumGet(BUFF, "UInt"), NumGet(BUFF, 4, "UInt")]
+		PostMessage(0x4E1, Zoom[1], Zoom[2], this.hGutter)     ; EM_SETZOOM
+		PostMessage(0x4DE, 0, &BUFF+8, this.hGutter)           ; EM_SETSCROLLPOS
+		this.ZoomLevel := Zoom[1] / Zoom[2]
+		if (this.ZoomLevel != this.LastZoomLevel)
+			SetTimer(this.Bound.GuiSize, -0), this.LastZoomLevel := this.ZoomLevel
 	}
 	
 	GetKeywordFromCaret()
@@ -392,7 +400,15 @@ class CodeQuickTester
 	
 	GuiSize()
 	{
-		gw := A_GuiWidth, gh := A_GuiHeight, gtw := Round(this.Settings.GutterWidth)
+		static RECT, _ := VarSetCapacity(RECT, 16, 0)
+		if A_Gui
+			gw := A_GuiWidth, gh := A_GuiHeight
+		else
+		{
+			DllCall("GetClientRect", "UPtr", this.hMainWindow, "Ptr", &RECT, "UInt")
+			gw := NumGet(RECT, 8, "Int"), gh := NumGet(RECT, 12, "Int")
+		}
+		gtw := Round(this.Settings.GutterWidth) * (this.ZoomLevel ? this.ZoomLevel : 1)
 		GuiControl, Move, % this.RichCode.hWnd, % "x" 5+gtw "y" 5     "w" gw-10-gtw "h" gh-60
 		if this.Settings.GutterWidth
 			GuiControl, Move, % this.hGutter  , % "x" 5     "y" 5     "w" gtw       "h" gh-60
@@ -430,6 +446,7 @@ class CodeQuickTester
 		
 		; Delete timers
 		SetTimer(this.Bound.SyncGutter, "Delete")
+		SetTimer(this.Bound.GuiSize, "Delete")
 		
 		; Break all the BoundFunc circular references
 		this.Delete("Bound")
