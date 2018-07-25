@@ -16,9 +16,7 @@ class MenuButtons
 			this.Parent.FilePath := FilePath
 		}
 		
-		Value := this.Parent.RichCode.Value
-		Value := StrReplace(Value, "`r`n", "`n")
-		FileOpen(this.Parent.FilePath, "w", "UTF-8-RAW").Write(Value)
+		FileOpen(this.Parent.FilePath, "w").Write(this.Parent.RichCode.Value)
 		
 		this.Parent.RichCode.Modified := False
 		this.Parent.UpdateStatusBar()
