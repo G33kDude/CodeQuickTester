@@ -106,7 +106,7 @@ class CodeQuickTester
 		; Add code editor and gutter for line numbers
 		this.RichCode := new RichCode(this.Settings, "-E0x20000")
 		RichEdit_AddMargins(this.RichCode.hWnd, 3, 3)
-		if Settings.GutterWidth
+		if Settings.Gutter.Width
 			this.AddGutter()
 		
 		if B_Params.HasKey(1)
@@ -162,15 +162,15 @@ class CodeQuickTester
 	
 	AddGutter()
 	{
-		s := this.Settings, f := s.Font
+		s := this.Settings, f := s.Font, g := s.Gutter
 		
 		; Add the RichEdit control for the gutter
-		Gui, Add, Custom, ClassRichEdit50W hWndhGutter +0x5031b1c4 +HScroll -VScroll
+		Gui, Add, Custom, ClassRichEdit50W hWndhGutter +0x5031b1c4 -HScroll -VScroll
 		this.hGutter := hGutter
 		
 		; Set the background and font settings
-		FGColor := RichCode.BGRFromRGB(s.FGColor)
-		BGColor := RichCode.BGRFromRGB(s.BGColor)
+		FGColor := RichCode.BGRFromRGB(g.FGColor)
+		BGColor := RichCode.BGRFromRGB(g.BGColor)
 		VarSetCapacity(CF2, 116, 0)
 		NumPut(116,        &CF2+ 0, "UInt") ; cbSize      = sizeof(CF2)
 		NumPut(0xE<<28,    &CF2+ 4, "UInt") ; dwMask      = CFM_COLOR|CFM_FACE|CFM_SIZE
@@ -276,7 +276,7 @@ class CodeQuickTester
 	{
 		static BUFF, _ := VarSetCapacity(BUFF, 16, 0)
 		
-		if !this.Settings.GutterWidth
+		if !this.Settings.Gutter.Width
 			return
 		
 		SendMessage(0x4E0, &BUFF, &BUFF+4, this.RichCode.hwnd) ; EM_GETZOOM
@@ -349,7 +349,7 @@ class CodeQuickTester
 		if (Syntax := HelpFile.GetSyntax(this.GetKeywordFromCaret()))
 			SB_SetText(Syntax, 5)
 
-		if this.Settings.GutterWidth
+		if this.Settings.Gutter.Width
 		{
 			ControlGet, Lines, LineCount,,, ahk_id %hCodeEditor%
 			if (Lines != this.LineCount)
@@ -412,9 +412,9 @@ class CodeQuickTester
 			DllCall("GetClientRect", "UPtr", this.hMainWindow, "Ptr", &RECT, "UInt")
 			gw := NumGet(RECT, 8, "Int"), gh := NumGet(RECT, 12, "Int")
 		}
-		gtw := 3 + Round(this.Settings.GutterWidth) * (this.ZoomLevel ? this.ZoomLevel : 1), sbh := this.StatusBarHeight
+		gtw := 3 + Round(this.Settings.Gutter.Width) * (this.ZoomLevel ? this.ZoomLevel : 1), sbh := this.StatusBarHeight
 		GuiControl, Move, % this.RichCode.hWnd, % "x" 0+gtw "y" 0         "w" gw-gtw "h" gh-28-sbh
-		if this.Settings.GutterWidth
+		if this.Settings.Gutter.Width
 			GuiControl, Move, % this.hGutter  , % "x" 0     "y" 0         "w" gtw    "h" gh-28-sbh
 		GuiControl, Move, % this.hRunButton   , % "x" 0     "y" gh-28-sbh "w" gw     "h" 28
 	}

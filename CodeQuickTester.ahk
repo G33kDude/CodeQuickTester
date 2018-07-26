@@ -32,11 +32,14 @@ Settings :=
 		"Size": 11,
 		"Bold": False
 	},
-	
-	; Gutter width in pixels
-	; Make this larger when using larger fonts
-	; Set to 0 to disable the gutter
-	"GutterWidth": 40,
+	"Gutter": {
+		; Width in pixels. Make this larger when using
+		; larger fonts. Set to 0 to disable the gutter.
+		"Width": 40,
+		
+		"FGColor": 0x9FAFAF,
+		"BGColor": 0x262626
+	},
 	
 	; Highlighter (colors are 0xRRGGBB)
 	"UseHighlighter": True,
