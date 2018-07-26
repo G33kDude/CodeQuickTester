@@ -144,3 +144,30 @@ GetFullPathName(FilePath)
 	, "UInt", Size, "Str", Path, "Ptr", 0, "UInt")
 	return Path
 }
+
+RichEdit_AddMargins(hRichEdit, x:=0, y:=0, w:=0, h:=0)
+{
+    static WineVer := DllCall("ntdll.dll\wine_get_version", "AStr")
+    VarSetCapacity(RECT, 16, 0)
+    if (x | y | w | h)
+    {
+        if WineVer
+        {
+			; Workaround for bug in Wine 3.0.2.
+			; This code will need to be updated this code
+			; after future Wine releases that fix it.
+            NumPut(x, RECT,  0, "Int"), NumPut(y, RECT,  4, "Int")
+            NumPut(w, RECT,  8, "Int"), NumPut(h, RECT, 12, "Int")
+        }
+        else
+        {
+            if !DllCall("GetClientRect", "UPtr", hRichEdit, "UPtr", &RECT, "UInt")
+                throw Exception("Couldn't get RichEdit Client RECT")
+            NumPut(x + NumGet(RECT,  0, "Int"), RECT,  0, "Int")
+            NumPut(y + NumGet(RECT,  4, "Int"), RECT,  4, "Int")
+            NumPut(w + NumGet(RECT,  8, "Int"), RECT,  8, "Int")
+            NumPut(h + NumGet(RECT, 12, "Int"), RECT, 12, "Int")
+        }
+    }
+    SendMessage(0xB3, 0, &RECT, hRichEdit)
+}

@@ -77,7 +77,6 @@ class CodeQuickTester
 		this.hMainWindow := hMainWindow
 		this.Menus := CreateMenus(Menus)
 		Gui, Menu, % this.Menus[1]
-		Gui, Margin, 5, 5
 		
 		; If set as default, check the highlighter option
 		if this.Settings.UseHighlighter
@@ -105,7 +104,8 @@ class CodeQuickTester
 			OnMessage(Msg, this.Bound.OnMessage)
 		
 		; Add code editor and gutter for line numbers
-		this.RichCode := new RichCode(this.Settings)
+		this.RichCode := new RichCode(this.Settings, "-E0x20000")
+		RichEdit_AddMargins(this.RichCode.hWnd, 3, 3)
 		if Settings.GutterWidth
 			this.AddGutter()
 		
@@ -147,9 +147,11 @@ class CodeQuickTester
 		GuiControl, +g, %hRunButton%, %BoundFunc%
 		
 		; Add status bar
-		Gui, Add, StatusBar
+		Gui, Add, StatusBar, hWndhStatusBar
 		SB_SetParts(70, 70, 60, 70)
 		this.UpdateStatusBar()
+		ControlGetPos,,,, StatusBarHeight,, ahk_id %hStatusBar%
+		this.StatusBarHeight := StatusBarHeight
 		
 		; Initialize the AutoComplete
 		this.AC := new this.AutoComplete(this, this.settings.UseAutoComplete)
@@ -163,7 +165,7 @@ class CodeQuickTester
 		s := this.Settings, f := s.Font
 		
 		; Add the RichEdit control for the gutter
-		Gui, Add, Custom, ClassRichEdit50W hWndhGutter +0x5031b1c4 +E0x20000 +HScroll -VScroll
+		Gui, Add, Custom, ClassRichEdit50W hWndhGutter +0x5031b1c4 +HScroll -VScroll
 		this.hGutter := hGutter
 		
 		; Set the background and font settings
@@ -177,6 +179,8 @@ class CodeQuickTester
 		StrPut(f.Typeface, &CF2+26, 32, "UTF-16") ; szFaceName = TCHAR
 		SendMessage(0x444, 0, &CF2,    hGutter) ; EM_SETCHARFORMAT
 		SendMessage(0x443, 0, BGColor, hGutter) ; EM_SETBKGNDCOLOR
+		
+		RichEdit_AddMargins(hGutter, 3, 3)
 	}
 	
 	RunButton()
@@ -408,11 +412,11 @@ class CodeQuickTester
 			DllCall("GetClientRect", "UPtr", this.hMainWindow, "Ptr", &RECT, "UInt")
 			gw := NumGet(RECT, 8, "Int"), gh := NumGet(RECT, 12, "Int")
 		}
-		gtw := Round(this.Settings.GutterWidth) * (this.ZoomLevel ? this.ZoomLevel : 1)
-		GuiControl, Move, % this.RichCode.hWnd, % "x" 5+gtw "y" 5     "w" gw-10-gtw "h" gh-60
+		gtw := 3 + Round(this.Settings.GutterWidth) * (this.ZoomLevel ? this.ZoomLevel : 1), sbh := this.StatusBarHeight
+		GuiControl, Move, % this.RichCode.hWnd, % "x" 0+gtw "y" 0         "w" gw-gtw "h" gh-28-sbh
 		if this.Settings.GutterWidth
-			GuiControl, Move, % this.hGutter  , % "x" 5     "y" 5     "w" gtw       "h" gh-60
-		GuiControl, Move, % this.hRunButton   , % "x" 5     "y" gh-50 "w" gw-10     "h" 22
+			GuiControl, Move, % this.hGutter  , % "x" 0     "y" 0         "w" gtw    "h" gh-28-sbh
+		GuiControl, Move, % this.hRunButton   , % "x" 0     "y" gh-28-sbh "w" gw     "h" 28
 	}
 	
 	GuiDropFiles(hWnd, Files)
