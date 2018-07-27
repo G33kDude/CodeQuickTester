@@ -148,7 +148,6 @@ class CodeQuickTester
 		
 		; Add status bar
 		Gui, Add, StatusBar, hWndhStatusBar
-		SB_SetParts(70, 70, 60, 70)
 		this.UpdateStatusBar()
 		ControlGetPos,,,, StatusBarHeight,, ahk_id %hStatusBar%
 		this.StatusBarHeight := StatusBarHeight
@@ -324,34 +323,34 @@ class CodeQuickTester
 		; Delete the timer if it was called by one
 		SetTimer(this.Bound.UpdateStatusBar, "Delete")
 		
-		hCodeEditor := this.RichCode.hWnd
-		hMainWindow := this.hMainWindow
-		Gui, %hMainWindow%:Default
-		
+		; Get the document length and cursor position
 		VarSetCapacity(GTL, 8, 0), NumPut(1200, GTL, 4, "UInt")
-		SendMessage, 0x45F, &GTL, 0,, ahk_id %hCodeEditor% ; EM_GETTEXTLENGTHEX (Handles newlines better than GuiControlGet on RE)
-		Len := ErrorLevel
+		Len := this.RichCode.SendMsg(0x45F, &GTL, 0) ; EM_GETTEXTLENGTHEX (Handles newlines better than GuiControlGet on RE)
+		ControlGet, Row, CurrentLine,,, % "ahk_id" this.RichCode.hWnd
+		ControlGet, Col, CurrentCol,,, % "ahk_id" this.RichCode.hWnd
 		
-		ControlGet, Row, CurrentLine,,, ahk_id %hCodeEditor%
-		ControlGet, Col, CurrentCol,,, ahk_id %hCodeEditor%
-		SB_SetText("Len " Len, 1)
-		SB_SetText("Line " Row, 2)
-		SB_SetText("Col " Col, 3)
-		
-		Selection := this.RichCode.Selection
+		; Get Selected Text Length
 		; If the user has selected 1 char further than the end of the document,
 		; which is allowed in a RichEdit control, subtract 1 from the length
-		Len := Selection[2] - Selection[1] - (Selection[2] > Len)
-		SB_SetText("Sel: " (Len > 0 ? Len : 0), 4) ; >0 because sometimes it comes up as -1 if you hold down paste
+		Sel := this.RichCode.Selection
+		Sel := Sel[2] - Sel[1] - (Sel[2] > Len)
 		
+		; Get the syntax tip, if any
+		if (SyntaxTip := HelpFile.GetSyntax(this.GetKeywordFromCaret()))
+			this.SyntaxTip := SyntaxTip
+		
+		; Update the Status Bar text
+		Gui, % this.hMainWindow ":Default"
+		SB_SetText("Len " Len ", Line " Row ", Col " Col
+		. (Sel > 0 ? ", Sel " Sel : "") "     " this.SyntaxTip)
+		
+		; Update the title Bar
 		this.UpdateTitle()
 		
-		if (Syntax := HelpFile.GetSyntax(this.GetKeywordFromCaret()))
-			SB_SetText(Syntax, 5)
-
+		; Update the gutter to match the document
 		if this.Settings.Gutter.Width
 		{
-			ControlGet, Lines, LineCount,,, ahk_id %hCodeEditor%
+			ControlGet, Lines, LineCount,,, % "ahk_id" this.RichCode.hWnd
 			if (Lines != this.LineCount)
 			{
 				Loop, %Lines%
