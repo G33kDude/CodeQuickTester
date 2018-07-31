@@ -209,21 +209,24 @@ class CodeQuickTester
 	
 	LoadCode(Code, FilePath:="")
 	{
-		CodeEditor := this.RichCode.Value
-		if (CodeEditor && CodeEditor != Code) ; TODO: Do I need to Trim() here?
-		{
-			Gui, +OwnDialogs
-			MsgBox, 308, % this.Title " - Confirm Overwrite", Are you sure you want to overwrite your code?
-			IfMsgBox, No
-				return
-		}
+		; Do nothing if nothing is changing
+		if (this.FilePath == FilePath && this.RichCode.Value == Code)
+			return
 		
-		; Keep track of the file currently being edited
+		; Confirm the user really wants to load new code
+		Gui, +OwnDialogs
+		MsgBox, 308, % this.Title " - Confirm Overwrite"
+		, Are you sure you want to overwrite your code?
+		IfMsgBox, No
+			return
+		
+		; If we're changing the open file mark as modified
+		; If we're loading a new file mark as unmodified
+		this.RichCode.Modified := this.FilePath == FilePath
 		this.FilePath := FilePath
 		
 		; Update the GUI
 		this.RichCode.Value := Code
-		this.RichCode.Modified := False
 		this.UpdateStatusBar()
 	}
 	

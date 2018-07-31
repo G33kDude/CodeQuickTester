@@ -120,7 +120,8 @@ class MenuButtons
 	
 	AutoIndent()
 	{
-		this.Parent.LoadCode(AutoIndent(this.Parent.RichCode.Value, this.Parent.Settings.Indent))
+		this.Parent.LoadCode(AutoIndent(this.Parent.RichCode.Value
+		, this.Parent.Settings.Indent), this.Parent.FilePath)
 	}
 	
 	Help()
