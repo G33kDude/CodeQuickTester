@@ -22,6 +22,25 @@ class MenuButtons
 		this.Parent.UpdateStatusBar()
 	}
 	
+	Rename()
+	{
+		; Make sure the opened file still exists
+		if !InStr(FileExist(this.Parent.FilePath), "A")
+			throw Exception("Opened file no longer exists")
+		
+		; Ask where to move it to
+		FileSelectFile, FilePath, S10, % this.Parent.FilePath
+		, Rename As, AutoHotkey Scripts (*.ahk)
+		if InStr(FileExist(FilePath), "A")
+			throw Exception("Destination file already exists")
+		
+		; Attempt to move it
+		FileMove, % this.Parent.FilePath, % FilePath
+		if ErrorLevel
+			throw Exception("Failed to rename file")
+		this.Parent.FilePath := FilePath
+	}
+	
 	Open()
 	{
 		Gui, +OwnDialogs

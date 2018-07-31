@@ -35,6 +35,7 @@ class CodeQuickTester
 				["Open &Working Dir`tCtrl+Shift+O", Buttons.OpenFolder.Bind(Buttons)],
 				["&Save`tCtrl+S", Buttons.Save.Bind(Buttons, False)],
 				["&Save as`tCtrl+Shift+S", Buttons.Save.Bind(Buttons, True)],
+				["Rename", Buttons.Rename.Bind(Buttons)],
 				[],
 				["&Publish", Buttons.Publish.Bind(Buttons)],
 				["&Fetch", Buttons.Fetch.Bind(Buttons)],
@@ -140,6 +141,9 @@ class CodeQuickTester
 		else
 			this.RichCode.Value := ""
 		
+		if (this.FilePath == "")
+			Menu, % this.Menus[2], Disable, Rename
+		
 		; Add run button
 		Gui, Add, Button, hWndhRunButton, &Run
 		this.hRunButton := hRunButton
@@ -224,6 +228,10 @@ class CodeQuickTester
 		; If we're loading a new file mark as unmodified
 		this.RichCode.Modified := this.FilePath == FilePath
 		this.FilePath := FilePath
+		if (this.FilePath == "")
+			Menu, % this.Menus[2], Disable, Rename
+		else
+			Menu, % this.Menus[2], Enable, Rename
 		
 		; Update the GUI
 		this.RichCode.Value := Code
