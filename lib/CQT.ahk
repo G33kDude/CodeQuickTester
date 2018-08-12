@@ -291,6 +291,13 @@ class CodeQuickTester
 		
 		SendMessage(0x4E0, &BUFF, &BUFF+4, this.RichCode.hwnd) ; EM_GETZOOM
 		SendMessage(0x4DD, 0, &BUFF+8, this.RichCode.hwnd)     ; EM_GETSCROLLPOS
+		
+		; Don't update the gutter unnecessarily
+		State := NumGet(BUFF, 0, "UInt") . NumGet(BUFF, 4, "UInt")
+		. NumGet(BUFF, 8, "UInt") . NumGet(BUFF, 12, "UInt")
+		if (State == this.GutterState)
+			return
+		
 		NumPut(-1, BUFF, 8, "UInt") ; Don't sync horizontal position
 		Zoom := [NumGet(BUFF, "UInt"), NumGet(BUFF, 4, "UInt")]
 		PostMessage(0x4E1, Zoom[1], Zoom[2], this.hGutter)     ; EM_SETZOOM
@@ -298,6 +305,8 @@ class CodeQuickTester
 		this.ZoomLevel := Zoom[1] / Zoom[2]
 		if (this.ZoomLevel != this.LastZoomLevel)
 			SetTimer(this.Bound.GuiSize, -0), this.LastZoomLevel := this.ZoomLevel
+		
+		this.GutterState := State
 	}
 	
 	GetKeywordFromCaret()
