@@ -9,9 +9,10 @@ AutoHotkey language and community.
 To learn more about what it does, look in
 the features section of this document.
 
-![http://i.imgur.com/eEZ4h8v.png](http://i.imgur.com/eEZ4h8v.png)<br>
-<sub>[Old Image](http://i.imgur.com/03W28It.png) | [Example script output](
-http://i.imgur.com/QYmKnN4.png)</sub>
+![https://i.imgur.com/VvDa2jx.png](https://i.imgur.com/VvDa2jx.png)<br>
+<sub>[Old Image](https://i.imgur.com/eEZ4h8v.png) | [Older Image](
+https://i.imgur.com/03W28It.png) | [Example script output](
+https://i.imgur.com/QYmKnN4.png)</sub>
 
 
 ## Features
