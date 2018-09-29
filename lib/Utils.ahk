@@ -139,9 +139,9 @@ Ini_Load(Contents)
 
 GetFullPathName(FilePath)
 {
-	Size := VarSetCapacity(Path, 260*A_IsUnicode, 0)
+	VarSetCapacity(Path, A_IsUnicode ? 520 : 260, 0)
 	DllCall("GetFullPathName", "Str", FilePath
-	, "UInt", Size, "Str", Path, "Ptr", 0, "UInt")
+	, "UInt", 260, "Str", Path, "Ptr", 0, "UInt")
 	return Path
 }
 
