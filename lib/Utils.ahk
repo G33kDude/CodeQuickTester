@@ -90,11 +90,11 @@ Ahkbin(Content, Name="", Desc="", Channel="")
 	if Channel
 		Form .= "&announce=on&channel=" UriEncode(Channel)
 	
-	Pbin := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	Pbin := ComObjCreate("MSXML2.XMLHTTP")
 	Pbin.Open("POST", URL, False)
 	Pbin.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded")
 	Pbin.Send(Form)
-	return Pbin.Option(1)
+	return Pbin.getResponseHeader("ahk-location")
 }
 
 ; Modified by GeekDude from http://goo.gl/0a0iJq
