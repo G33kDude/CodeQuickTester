@@ -55,9 +55,9 @@ DeHashBang(Script)
 
 UrlDownloadToVar(Url)
 {
-	http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	http.Open("GET", Url, false), http.Send()
-	return http.ResponseText
+	xhr := ComObjCreate("MSXML2.XMLHTTP")
+	xhr.Open("GET", url, false), xhr.Send()
+	return xhr.ResponseText
 }
 
 ; Helper function, to make passing in expressions resulting in function objects easier
