@@ -168,7 +168,7 @@ class CodeQuickTester
 		s := this.Settings, f := s.Font, g := s.Gutter
 		
 		; Add the RichEdit control for the gutter
-		Gui, Add, Custom, ClassRichEdit50W hWndhGutter +0x5031b1c4 -HScroll -VScroll
+		Gui, Add, Custom, ClassRichEdit50W hWndhGutter +0x5031b1c6 -HScroll -VScroll
 		this.hGutter := hGutter
 		
 		; Set the background and font settings
@@ -183,7 +183,7 @@ class CodeQuickTester
 		SendMessage(0x444, 0, &CF2,    hGutter) ; EM_SETCHARFORMAT
 		SendMessage(0x443, 0, BGColor, hGutter) ; EM_SETBKGNDCOLOR
 		
-		RichEdit_AddMargins(hGutter, 3, 3)
+		RichEdit_AddMargins(hGutter, 3, 3, -3, 0)
 	}
 	
 	RunButton()
