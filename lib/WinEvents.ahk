@@ -1,3 +1,4 @@
+﻿
 class WinEvents ; static class
 {
 	static _ := WinEvents.AutoInit()
