@@ -1,188 +1,141 @@
 class Find
 {
-	__New(Parent)
-	{
-		this.Parent := Parent
-		
-		ParentWnd := this.Parent.hMainWindow
-		Gui, New, +Owner%ParentWnd% +ToolWindow +hWndhWnd
-		this.hWnd := hWnd
-		Gui, Margin, 5, 5
-		
-		
+	title => this.parent.title " - Find"
+
+	__New(parent) {
+		this.parent := parent
+
+		this.gui := Gui("+Owner" this.parent.gui.hWnd " +ToolWindow")
+		this.gui.MarginX := 5
+		this.gui.MarginY := 5
+
 		; Search
-		Gui, Add, Edit, hWndhWnd w200
-		SendMessage, 0x1501, True, &cue := "Search Text",, ahk_id %hWnd% ; EM_SETCUEBANNER
-		this.hNeedle := hWnd
-		
-		Gui, Add, Button, yp-1 x+m w75 Default hWndhWnd, Find Next
-		Bound := this.BtnFind.Bind(this)
-		GuiControl, +g, %hWnd%, %Bound%
-		
-		Gui, Add, Button, yp x+m w75 hWndhWnd, Coun&t All
-		Bound := this.BtnCount.Bind(this)
-		GuiControl, +g, %hWnd%, %Bound%
-		
-		
+		this.editNeedle := this.gui.AddEdit("w200")
+		SendMessage 0x1501, true, StrPtr("Search Text"), this.editNeedle ; EM_SETCUEBANNER
+
+		this.gui.AddButton("yp-1 x+m w75 Default", "Find Next")
+			.OnEvent("Click", (*) => this.BtnFind())
+
+		this.gui.AddButton("yp x+m w75", "Coun&t All")
+			.OnEvent("Click", (*) => this.BtnCount())
+
 		; Replace
-		Gui, Add, Edit, hWndhWnd w200 xm Section
-		SendMessage, 0x1501, True, &cue := "Replacement",, ahk_id %hWnd% ; EM_SETCUEBANNER
-		this.hReplace := hWnd
-		
-		Gui, Add, Button, yp-1 x+m w75 hWndhWnd, &Replace
-		Bound := this.Replace.Bind(this)
-		GuiControl, +g, %hWnd%, %Bound%
-		
-		Gui, Add, Button, yp x+m w75 hWndhWnd, Replace &All
-		Bound := this.ReplaceAll.Bind(this)
-		GuiControl, +g, %hWnd%, %Bound%
-		
-		
+		this.editReplace := this.gui.AddEdit("w200 xm Section")
+		SendMessage 0x1501, True, StrPtr("Replacement"), this.editReplace ; EM_SETCUEBANNER
+
+		this.gui.AddButton("yp-1 x+m w75", "&Replace")
+			.onEvent("Click", (*) => this.Replace())
+
+		this.gui.AddButton("yp1 x+m w75", "Replace &All")
+			.onEvent("Click", (*) => this.ReplaceAll())
+
 		; Options
-		Gui, Add, Checkbox, hWndhWnd xm, &Case Sensitive
-		this.hOptCase := hWnd
-		Gui, Add, Checkbox, hWndhWnd, Re&gular Expressions
-		this.hOptRegEx := hWnd
-		Gui, Add, Checkbox, hWndhWnd, Transform`, &Deref
-		this.hOptDeref := hWnd
-		
-		
-		Gui, Show,, % this.Parent.Title " - Find"
-		
-		WinEvents.Register(this.hWnd, this)
+		this.optCase := this.gui.AddCheckbox("xm", "&Case Sensitive")
+		this.optRegEx := this.gui.AddCheckbox("xm", "Regular E&xpression")
+
+		this.gui.Title := this.title
+
+		this.gui.OnEvent "Close", (*) => this.gui.Hide()
+		this.gui.OnEvent "Escape", (*) => this.gui.Hide()
 	}
-	
-	GuiClose()
-	{
-		GuiControl, -g, % this.hButton
-		WinEvents.Unregister(this.hWnd)
-		Gui, Destroy
+
+	Show() {
+		this.editNeedle.Focus
+		this.gui.Show
 	}
-	
-	GuiEscape()
-	{
-		this.GuiClose()
-	}
-	
-	GetNeedle()
-	{
-		Opts := this.Case ? "`n" : "i`n"
-		Opts .= this.Needle ~= "^[^\(]\)" ? "" : ")"
-		if this.RegEx
-			return Opts . this.Needle
+
+	GetNeedle() {
+		needle := this.editNeedle.Text
+		options := this.optCase.Value ? "`n" : "i`n"
+		options .= needle ~= "^[^\(]\)" ? "" : ")"
+		if this.optRegEx.Value
+			return options . needle
 		else
-			return Opts "\Q" StrReplace(this.Needle, "\E", "\E\\E\Q") "\E"
+			return options "\Q" StrReplace(needle, "\E", "\E\\E\Q") "\E"
 	}
-	
-	Find(StartingPos:=1, WrapAround:=True)
-	{
-		Needle := this.GetNeedle()
-		
+
+	Find(startingPos := 1, wrapAround := True) {
+		needle := this.GetNeedle()
+
 		; Search from StartingPos
-		NextPos := RegExMatch(this.Haystack, Needle, Match, StartingPos)
-		
+		nextPos := RegExMatch(this.parent.RichCode.Text, needle, &Match, startingPos)
+
 		; Search from the top
-		if (!NextPos && WrapAround)
-			NextPos := RegExMatch(this.Haystack, Needle, Match)
-		
-		return NextPos ? [NextPos, NextPos+StrLen(Match)] : False
+		if (!nextPos && wrapAround)
+			nextPos := RegExMatch(this.parent.RichCode.Text, needle, &Match)
+
+		return nextPos ? [nextPos, nextPos + Match.Len] : False
 	}
-	
-	Submit()
-	{
-		; Options
-		GuiControlGet, Deref,, % this.hOptDeref
-		GuiControlGet, Case,, % this.hOptCase
-		this.Case := Case
-		GuiControlGet, RegEx,, % this.hOptRegEx
-		this.RegEx := RegEx
-		
-		; Search Text/Needle
-		GuiControlGet, Needle,, % this.hNeedle
-		if Deref
-			Transform, Needle, Deref, %Needle%
-		this.Needle := Needle
-		
-		; Replacement
-		GuiControlGet, Replace,, % this.hReplace
-		if Deref
-			Transform, Replace, Deref, %Replace%
-		this.Replace := Replace
-		
-		; Haystack
-		this.Haystack := StrReplace(this.Parent.RichCode.Value, "`r")
-	}
-	
-	BtnFind()
-	{
-		Gui, +OwnDialogs
-		this.Submit()
-		
+
+	BtnFind() {
+		this.gui.Opt("OwnDialogs")
+
 		; Find and select the item or error out
-		if (Pos := this.Find(this.Parent.RichCode.Selection[1]+2))
-			this.Parent.RichCode.Selection := [Pos[1] - 1, Pos[2] - 1]
+		if (pos := this.Find(this.parent.RichCode.Selection[1] + 2))
+			this.parent.RichCode.Selection := [pos[1] - 1, pos[2] - 1]
 		else
-			MsgBox, 0x30, % this.Parent.Title " - Find", Search text not found
+			MsgBox "Search text not found", this.title, 0x30
 	}
-	
+
 	BtnCount()
 	{
-		Gui, +OwnDialogs
-		this.Submit()
-		
+		this.gui.Opt("OwnDialogs")
+
 		; Find and count all instances
-		Count := 0, Start := 1
-		while (Pos := this.Find(Start, False))
-			Start := Pos[1]+1, Count += 1
-		
-		MsgBox, 0x40, % this.Parent.Title " - Find", %Count% instances found
+		count := 0, start := 1
+		while (pos := this.Find(start, False))
+			start := pos[1] + 1, count += 1
+
+		MsgBox count " instances found", this.title, 0x40
 	}
-	
+
 	Replace()
 	{
-		this.Submit()
-		
 		; Get the current selection
-		Sel := this.Parent.RichCode.Selection
-		
+		sel := this.parent.RichCode.Selection
+
 		; Find the next occurrence including the current selection
-		Pos := this.Find(Sel[1]+1)
-		
+		pos := this.Find(sel[1] + 1)
+
 		; If the found item is already selected
-		if (Sel[1]+1 == Pos[1] && Sel[2]+1 == Pos[2])
-		{
+		if (sel[1] + 1 == pos[1] && sel[2] + 1 == pos[2]) {
 			; Replace it
-			this.Parent.RichCode.SelectedText := this.Replace
-			
-			; Update the haystack to include the replacement
-			this.Haystack := StrReplace(this.Parent.RichCode.Value, "`r")
-			
+			if this.optRegEx.Value {
+				this.parent.RichCode.SelectedText := RegExReplace(
+					this.parent.RichCode.SelectedText,
+					this.editNeedle.Text,
+					this.editReplace.Text
+				)
+			} else
+				this.parent.RichCode.SelectedText := this.editReplace.Text
+
 			; Find the next item *not* including the current selection
-			Pos := this.Find(Sel[1]+StrLen(this.Replace)+1)
+			pos := this.Find(sel[1] + StrLen(this.editReplace.Text) + 1)
 		}
-		
+
 		; Select the next found item or error out
-		if Pos
-			this.Parent.RichCode.Selection := [Pos[1] - 1, Pos[2] - 1]
+		if pos
+			this.parent.RichCode.Selection := [pos[1] - 1, pos[2] - 1]
 		else
-			MsgBox, 0x30, % this.Parent.Title " - Find", No more instances found
+			MsgBox "No more instances found", this.title, 0x30
 	}
-	
-	ReplaceAll()
-	{
-		rc := this.Parent.RichCode
-		this.Submit()
-		
-		Needle := this.GetNeedle()
-		
+
+	ReplaceAll() {
+		rc := this.parent.richCode
+
 		; Replace the text in a way that pushes to the undo buffer
 		rc.Frozen := True
-		Sel := rc.Selection
+		sel := rc.Selection
 		rc.Selection := [0, -1]
-		rc.SelectedText := RegExReplace(this.Haystack, Needle, this.Replace, Count)
-		rc.Selection := Sel
+		rc.SelectedText := RegExReplace(
+			rc.Text,
+			this.GetNeedle(),
+			this.editReplace.Text,
+			&Count
+		)
+		rc.Selection := sel
 		rc.Frozen := False
-		
-		MsgBox, 0x40, % this.Parent.Title " - Find", %Count% instances replaced
+
+		MsgBox Count " instances replaced", this.title, 0x40
 	}
 }

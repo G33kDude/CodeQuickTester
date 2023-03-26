@@ -1,141 +1,175 @@
-class HelpFile
-{
-	static BaseURL := "ms-its:" A_AhkPath "\..\AutoHotkey.chm::/docs/"
-	static Cache := {"Syntax": {}}
-	
-	GetPage(Path)
-	{
-		static xhttp := ComObjCreate("MSXML2.XMLHTTP.3.0")
-		html := ComObjCreate("htmlfile")
-		Path := this.BaseURL . RegExReplace(Path, "[?#].+")
-		xhttp.open("GET", Path, True), xhttp.send()
-		html.open(), html.write(xhttp.responseText), html.close()
+/**
+ * Interface for the AutoHotkey v2 help file.
+ */
+class HelpFile {
+
+	/** @type {String} Base string of the URL for documentation files */
+	baseUrl := "ms-its:{}::/docs"
+
+	/** @type {Map} Cache of known syntax strings by keyword */
+	syntaxes := Map(), syntaxes.CaseSense := false
+
+	/** @type {Map} Cache of known command URL fragments by keyword */
+	commands := Map(), commands.CaseSense := false
+
+	/** @type {Map} Cache of known variable URL fragments by keyword */
+	variables := Map(), variables.CaseSense := false
+
+	/** @type {Map} Cache of known URL fragments by keyword */
+	lookup := Map(), lookup.CaseSense := false
+
+	/**
+	 * @param {String} path - Path to the AutoHotkey.chm file
+	 */
+	__New(path := A_AhkPath "\..\AutoHotkey.chm") {
+		if !FileExist(path)
+			return this
+		this.baseUrl := Format(this.baseUrl, path)
+
+		; Get the command reference
+		page := this.GetPage("lib/index.htm")
+		rows := unset
+		if !IsSet(rows) ; Windows
+			try rows := page.querySelectorAll(".info td:first-child a")
+		if !IsSet(rows) ; Wine
+			try rows := page.body.querySelectorAll(".info td:first-child a")
+		if !IsSet(rows) { ; IE8
+			rows := this.HTMLCollection()
+			trows := page.getElementsByTagName("table")[0].children[0].children
+			loop trows.length
+				rows.push(trows.Item(A_Index - 1).children[0].children[0])
+		}
+
+		; Pull the keywords
+		loop rows.length {
+			row := rows.Item(A_Index - 1)
+			for text in StrSplit(row.innerText, "/")
+				if RegExMatch(text, "^[\w#]+", &match) && !this.commands.Has(match.0)
+					this.commands[match.0] := "lib/" RegExReplace(row.getAttribute("href"), "^about:")
+		}
+
+		; Get the variables reference
+		page := this.GetPage("Variables.htm")
+		rows := unset
+		if !IsSet(rows) ; Windows
+			try rows := page.querySelectorAll(".info td:first-child")
+		if !IsSet(rows) ; Wine
+			try rows := page.body.querySelectorAll(".info td:first-child")
+		if !IsSet(rows) { ; IE8
+			rows := HelpFile.HTMLCollection()
+			tables := page.getElementsByTagName("table")
+			loop tables.length {
+				trows := tables.Item(A_Index - 1).children[0].children
+				loop trows.length
+					rows.push(trows.Item(A_Index - 1).children[0])
+			}
+		}
+
+		; Pull the keywords
+		loop rows.length {
+			row := rows.Item(A_Index - 1)
+			if RegExMatch(row.innerText, "A_\w+", &match)
+				this.variables[match.0] := "Variables.htm#" row.parentNode.getAttribute("id")
+		}
+
+		; Combine
+		; out := ""
+		for k, v in this.commands {
+			this.lookup[k] := v
+			; out .= "|" k 
+		}
+		; A_Clipboard := SubStr(out, 2)
+		for k, v in this.variables
+			this.lookup[k] := v
+	}
+
+	/**
+	 * Gets an HtmlFile object for the given page
+	 * @param {String} path - The given page
+	 */
+	GetPage(path) {
+		; Strip fragment
+		path := this.baseUrl "/" RegExReplace(path, "[?#].+")
+
+		; Request the page
+		xhr := ComObject("MSXML2.XMLHTTP.3.0")
+		xhr.open("GET", path, True)
+		xhr.send()
+
+		; Load it into HtmlFile
+		html := ComObject("HtmlFile")
+		html.open()
+		html.write(xhr.responseText)
+		html.close()
+
+		; Wait for it to finish parsing
 		while !(html.readyState = "interactive" || html.readyState = "complete")
-			Sleep, 50
+			Sleep 50
+
 		return html
 	}
-	
-	GetLookup()
-	{
-		if this.Lookup
-			return this.Lookup
-		
-		; Scrape the command reference
-		this.Commands := {}
-		try
-			Page := this.GetPage("commands/index.htm")
-		
-		try ; Windows
-			rows := Page.querySelectorAll(".info td:first-child a")
-		catch ; Wine
-			try
-				rows := Page.body.querySelectorAll(".info td:first-child a")
-		catch ; IE8
-		{
-			rows := new this.HTMLCollection()
-			trows := Page.getElementsByTagName("table")[0].children[0].children
-			loop, % trows.length
-				rows.push(trows.Item(A_Index-1).children[0].children[0])
-		}
-		
-		loop, % rows.length
-			for i, text in StrSplit((row := rows.Item(A_Index-1)).innerText, "/")
-				if RegExMatch(text, "^[\w#]+", Match) && !this.Commands.HasKey(Match)
-					this.Commands[Match] := "commands/" RegExReplace(row.getAttribute("href"), "^about:")
-		
-		; Scrape the variables page
-		this.Variables := {}
-		try
-			Page := this.GetPage("Variables.htm")
-		
-		try ; Windows
-			rows := Page.querySelectorAll(".info td:first-child")
-		catch ; Wine
-			try
-				rows := Page.body.querySelectorAll(".info td:first-child")
-		catch ; IE8
-		{
-			rows := new this.HTMLCollection()
-			tables := Page.getElementsByTagName("table")
-			loop, % tables.length
-			{
-				trows := tables.Item(A_Index-1).children[0].children
-				loop, % trows.length
-					rows.push(trows.Item(A_Index-1).children[0])
-			}
-		}
-		
-		loop, % rows.length
-			if RegExMatch((row := rows.Item(A_Index-1)).innerText, "(A_\w+)", Match)
-				this.Variables[Match1] := "Variables.htm#" row.parentNode.getAttribute("id")
-		
-		; Combine
-		this.Lookup := this.Commands.Clone()
-		for k, v in this.Variables
-			this.Lookup[k] := v
-		
-		return this.Lookup
+
+	/**
+	 * Opens the help file to the page corresponding to a given keyword
+	 * 
+	 * @param {String} keyword - A keyword to open the help file to
+	 */
+	Open(keyword := "") {
+		suffix := this.lookup.has(keyword) ? this.lookup[keyword] : "AutoHotkey.htm"
+		Run 'hh.exe "' this.baseUrl '/' suffix '"'
 	}
-	
-	Open(Keyword:="")
-	{
-		Lookup := this.GetLookup()
-		Suffix := Lookup[Keyword] ? Lookup[Keyword] : "AutoHotkey.htm"
-		Run, % "hh.exe """ this.BaseURL . Suffix """"
-	}
-	
-	GetSyntax(Keyword:="")
-	{
-		; Generate this.Commands
-		this.GetLookup()
-		
+
+	/**
+	 * Gets the syntax hints for a given keyword, if available
+	 * 
+	 * @param {String} keyword - The keyword to pull the syntax for
+	 * 
+	 * @return {String} The syntax, or empty string
+	 */
+	GetSyntax(keyword := "") {
 		; Only look for Syntax of commands
-		if !(Path := this.Commands[Keyword])
-			return
-		
+		if !this.commands.Has(keyword)
+			return ""
+		path := this.commands[keyword]
+
 		; Try to find it in the cache
-		if this.Cache.Syntax.HasKey(Keyword)
-			return this.Cache.Syntax[Keyword]
-		
+		if this.syntaxes.Has(keyword)
+			return this.syntaxes[keyword]
+
 		; Get the right DOM to search
-		Page := this.GetPage(Path)
-		Root := Page ; Keep the page root in memory or it will be garbage collected
-		if RegExMatch(Path, "#\K.+", ID)
-			Page := Page.getElementById(ID)
-		
-		try ; Windows
-			Nodes := page.getElementsByClassName("Syntax")
-		catch ; Wine
-			try
-				Nodes := page.body.getElementsByClassName("Syntax")
-		catch ; IE8
-			Nodes := page.getElementsByTagName("pre")
-		
-		try ; Windows
-			Text := Nodes.Item(0).innerText
-		catch ; Some versions of Wine
-			Text := Nodes.Item(0).innerHTML
-		
-		; Cache and return the result
-		this.Cache.Syntax[Keyword] := StrSplit(Text, "`n", "`r")[1]
-		return this.Cache.Syntax[Keyword]
-	}
-	
-	class HTMLCollection
-	{
-		length[]
-		{
-			get
-			{
-				; Rounding MaxIndex produces a similar effect
-				; to this.Length(), but doesn't trigger recursion
-				return Round(this.MaxIndex())
+		page := this.GetPage(path)
+		root := page ; Keep the page root in memory or it will be garbage collected
+		if RegExMatch(path, "#\K.+", &id)
+			page := page.getElementById(id.0)
+
+		; Search for the syntax-containing element
+		if !IsSet(nodes) ; Windows
+			try nodes := page.getElementsByClassName("Syntax")
+		if !IsSet(nodes) ; Wine
+			try nodes := page.body.getElementsByClassName("Syntax")
+		if !IsSet(nodes) ; IE8
+			nodes := page.getElementsByTagName("pre")
+		if nodes.Length
+			element := nodes.Item(0)
+		else {
+			try {
+				loop 4
+					page := page.nextElementSibling
+				until page.classList.contains("Syntax")
 			}
 		}
-		
-		Item(i)
-		{
-			return this[i+1]
-		}
+
+		text := ""
+		if text == "" ; Windows
+			try text := nodes.Item(0).innerText
+		if text == "" ; Some versions of Wine
+			try text := nodes.Item(0).innerHTML
+
+		return this.syntaxes[keyword] := StrReplace(text, "`r")
+	}
+
+	/** Array wrapper implementing some of the HTMLCollection interface */
+	class HTMLCollection extends Array {
+		Item(i) => this[i + 1]
 	}
 }
