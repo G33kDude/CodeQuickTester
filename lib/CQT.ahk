@@ -515,7 +515,7 @@ class CodeQuickTester
 		ExitApp
 	}
 
-	Save(saveAs) {
+	Save(saveAs := false) {
 		if saveAs || !this.filePath {
 			this.gui.Opt "OwnDialogs"
 			path := FileSelect("S18", ,
