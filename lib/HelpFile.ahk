@@ -115,7 +115,7 @@ class HelpFile {
 	 * @param {String} keyword - A keyword to open the help file to
 	 */
 	Open(keyword := "") {
-		suffix := this.lookup.has(keyword) ? this.lookup[keyword] : "AutoHotkey.htm"
+		suffix := this.lookup.has(keyword) ? this.lookup[keyword] : "index.htm"
 		Run 'hh.exe "' this.baseUrl '/' suffix '"'
 	}
 
