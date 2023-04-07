@@ -75,9 +75,8 @@ class CodeQuickTester
 	AlwaysOnTop := False
 
 	subWindows := {
-		find: CodeQuickTester.Find(this)
+		find: this.__Static.Find(this),
 	}
-	findInstance := CodeQuickTester.Find(this)
 
 	syntaxTip := ""
 
@@ -596,8 +595,8 @@ class CodeQuickTester
 			this.LoadCode UrlDownloadToVar(url)
 	}
 
-	Find() { ; TODO: Recycle findInstance
-		this.findInstance.Show()
+	Find() {
+		this.subWindows.find.Show()
 	}
 
 	Paste() { ; TODO: Recycle PasteInstance
