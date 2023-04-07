@@ -1,9 +1,23 @@
-ExecScript(script, params := "", ahkPath := A_AhkPath)
-{
+; Modified from https://github.com/cocobelgica/AutoHotkey-Util/blob/master/ExecScript.ahk
+ExecScript(script, params := "", ahkPath := A_AhkPath) {
 	static shell := ComObject("WScript.Shell")
-	exec := shell.Exec(ahkPath " /CP65001 /script * " Params)
-	exec.StdIn.Write(script)
-	exec.StdIn.Close()
+	name := "\\.\pipe\AHK_CQT_" A_TickCount
+	cnp := () => DllCall("CreateNamedPipe", "Str", name, "UInt", 2, "UInt", 0,
+		"UInt", 255, "UInt", 0, "UInt", 0, "UPtr", 0, "UPtr", 0, "UPtr")
+	pipes := [cnp(), cnp(), cnp()]
+	if !FileExist(ahkPath)
+		throw Error("AutoHotkey runtime not found: " ahkPath)
+	if FileExist(name) {
+		exec := shell.Exec(ahkPath " /CP65001 " name " " params)
+		DllCall("ConnectNamedPipe", "UPtr", pipes[2], "UPtr", 0)
+		DllCall("ConnectNamedPipe", "UPtr", pipes[3], "UPtr", 0)
+		FileOpen(pipes[3], "h", "UTF-8").Write(script)
+	} else { ; Running under WINE with improperly implemented pipes
+		FileOpen(name := "AHK_CQT_TMP.ahk", "w").Write(script)
+		exec := shell.Exec(ahkPath " /CP65001 " name " " params)
+	}
+	for v in pipes
+		DllCall("CloseHandle", "UPtr", v)
 	return exec
 }
 
