@@ -41,7 +41,7 @@ settings := {
 		Punctuation: 0x97C0EB,
 		Strings: 0xCC9893,
 		A_Builtins: 0xF79B57,
-		Commands: 0xFF00FF, ;0xCDBFA3,
+		Commands: 0xCDBFA3,
 		Directives: 0x7CC8CF,
 		Flow: 0xE4EDED,
 		KeyNames: 0xCB8DD9
