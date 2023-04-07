@@ -266,7 +266,6 @@ class CodeQuickTester
 
 	LoadCode(code, filePath := "")
 	{
-		msgbox code
 		; Do nothing if nothing is changing
 		if (
 			GetFullPathName(this.filePath) == GetFullPathName(filePath) &&
@@ -294,7 +293,6 @@ class CodeQuickTester
 
 		; Update the GUI
 		this.richCode.Text := code
-		msgbox "code: " code "`ntext: " this.richCode.Text
 		this.UpdateStatusBar()
 	}
 
