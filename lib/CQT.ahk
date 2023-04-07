@@ -76,6 +76,7 @@ class CodeQuickTester
 
 	subWindows := {
 		find: this.__Static.Find(this),
+		publish: this.__Static.Publish(this)
 	}
 
 	syntaxTip := ""
@@ -575,11 +576,8 @@ class CodeQuickTester
 			: '"' A_AhkPath '" "' A_ScriptFullPath '"'
 	}
 
-	Publish() { ; TODO: Recycle pubInstance
-		; if WinExist("ahk_id" this.pubInstance.hWnd)
-		; 	WinActivate "ahk_id" this.pubInstance.hWnd
-		; else
-		; 	this.pubInstance := CQT.Publish(this)
+	Publish() {
+		this.subWindows.publish.Show()
 	}
 
 	Fetch() {
@@ -762,7 +760,7 @@ class CodeQuickTester
 	}
 
 	; #Include CQT.Paste.ahk
-	; #Include CQT.Publish.ahk
+	#Include CQT.Publish.ahk
 	#Include CQT.Find.ahk
 	; #Include CQT.ScriptOpts.ahk
 }
