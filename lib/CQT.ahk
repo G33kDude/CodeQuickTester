@@ -526,7 +526,7 @@ class CodeQuickTester
 			this.filePath := path
 		}
 
-		FileOpen(this.FilePath, "w").Write(this.richCode.Value)
+		FileOpen(this.FilePath, "w").Write(this.richCode.Text)
 		this.richCode.Modified := False
 		this.UpdateStatusBar()
 	}
