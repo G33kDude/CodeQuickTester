@@ -73,32 +73,19 @@ tester := CodeQuickTester(settings)
 ; TODO
 ; tester.RegisterCloseCallback(Func("TesterClose"))
 
-TesterRunning() {
-	return tester.HasProp("running") and tester.running
-}
+#HotIf tester.running
 
-TesterTerminate() {
-	if (tester.HasProp("exec")) {
-		tester.exec.Terminate()
-	}
-}
+~*Escape:: tester.exec.Terminate()
 
-#HotIf TesterRunning()
-~*Escape::
-{
-	TesterTerminate()
-}
-#HotIf
+#HotIf tester.settings.GlobalRun
 
-#HotIf false
 F5::
 !r:: {
 	global
-	if TesterRunning()
+	if tester.running
 		tester.OnRunButton() ; Click it twice to reload
 	tester.OnRunButton()
 }
-#HotIf
 
 #Include %A_ScriptDir%\RichCode.ahk\RichCode.ahk
 #Include %A_ScriptDir%\RichCode.ahk\Highlighters\AHK.ahk

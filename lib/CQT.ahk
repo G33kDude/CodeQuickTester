@@ -245,7 +245,7 @@ class CodeQuickTester
 	}
 
 	OnRunButton() {
-		if this.running and this.HasProp("exec") {
+		if this.running {
 			this.exec.Terminate() ; CheckIfRunning updates the GUI
 			return
 		}
@@ -563,8 +563,7 @@ class CodeQuickTester
 
 		; Follow the directory of the most recently opened file
 		SetWorkingDir path "\.."
-		;MsgBox "TODO"
-		; Still TODO ^
+		MsgBox "TODO"
 		this.subWindows.scriptOpts.UpdateFields()
 	}
 
