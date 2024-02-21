@@ -76,7 +76,8 @@ class CodeQuickTester
 
 	subWindows := {
 		find: this.__Static.Find(this),
-		publish: this.__Static.Publish(this)
+		publish: this.__Static.Publish(this),
+		scriptOpts: this.__Static.ScriptOpts(this),
 	}
 
 	syntaxTip := ""
@@ -115,7 +116,7 @@ class CodeQuickTester
 				["Include &Relative", (*) => this.IncludeRel()],
 				["Include &Absolute", (*) => this.IncludeAbs()],
 				[],
-				["Script &Options...", (*) => this.ScriptOpts(), ["shell32.dll", 22]],
+				["Script &Options...", (*) => this.ShowScriptOpts(), ["shell32.dll", 22]],
 			]],
 			["&Tools", [
 				["&Pastebin...`tCtrl+P", (*) => this.Paste(), ["imageres.dll", 242]],
@@ -244,7 +245,7 @@ class CodeQuickTester
 	}
 
 	OnRunButton() {
-		if this.running {
+		if this.running and this.HasProp("exec") {
 			this.exec.Terminate() ; CheckIfRunning updates the GUI
 			return
 		}
@@ -562,8 +563,9 @@ class CodeQuickTester
 
 		; Follow the directory of the most recently opened file
 		SetWorkingDir path "\.."
-		MsgBox "TODO"
-		; this.scriptOpts.UpdateFields()
+		;MsgBox "TODO"
+		; Still TODO ^
+		this.subWindows.scriptOpts.UpdateFields()
 	}
 
 	OpenFolder() {
@@ -602,11 +604,8 @@ class CodeQuickTester
 		; 	this.PasteInstance := CQT.Paste(this)
 	}
 
-	ScriptOpts() { ; TODO: Recycle ScriptOptsInstance
-		; if WinExist("ahk_id" this.ScriptOptsInstance.hWnd)
-		; 	WinActivate "ahk_id" this.ScriptOptsInstance.hWnd
-		; else
-		; 	this.ScriptOptsInstance := CQT.ScriptOpts(this)
+	ShowScriptOpts() {
+		this.subWindows.scriptOpts.Show()
 	}
 
 	ToggleOnTop() {
@@ -762,5 +761,5 @@ class CodeQuickTester
 	; #Include CQT.Paste.ahk
 	#Include CQT.Publish.ahk
 	#Include CQT.Find.ahk
-	; #Include CQT.ScriptOpts.ahk
+	#Include CQT.ScriptOpts.ahk
 }
